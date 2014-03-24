@@ -1,6 +1,5 @@
 {
     "name": "techdivision/rewritemodule",
-    "type": "package",
     "description": "A simple rewrite module for PHP based web servers.",
     "homepage": "https://github.com/techdivision/TechDivision_RewriteModule",
     "license": ["OSL-3.0"],
