@@ -12,7 +12,7 @@ before_install:
 before_script:
   - composer selfupdate
   - rm -rf ~/.composer/cache
-  - COMPOSER_ROOT_VERSION=dev-master composer install
+  - COMPOSER_ROOT_VERSION=dev-master
 
 script:
   - ant build
