@@ -277,9 +277,6 @@ class RewriteModule implements ModuleInterface
                 }
             }
 
-            // We have to set the server vars we take care of: SCRIPT_URL and SCRIPT_URI
-            $this->setModuleVars($request);
-
             // Iterate over all rules, resolve vars and apply the rule (if needed)
             foreach ($this->rules[$requestUrl] as $rule) {
 
@@ -299,30 +296,6 @@ class RewriteModule implements ModuleInterface
             // Re-throw as a ModuleException
             throw new ModuleException($e);
         }
-    }
-
-    /**
-     * Will set the additional server vars for the requested URI and URL so it will get preserved
-     * over any rewrite.
-     *
-     * @return void
-     *
-     * TODO do we need the query string as well?
-     */
-    protected function setModuleVars()
-    {
-        // Preserve the requested URI as a backup
-        $this->serverContext->setServerVar(
-            self::SCRIPT_URI,
-            $this->serverContext->getServerVar(ServerVars::REQUEST_URI)
-        );
-
-        // Preserve the complete URL as it was requested
-        $this->serverContext->setServerVar(
-            self::SCRIPT_URL,
-            $this->serverContext->getServerVar(ServerVars::SERVER_ADDR) .
-            $this->serverContext->getServerVar(ServerVars::REQUEST_URI)
-        );
     }
 
     /**
