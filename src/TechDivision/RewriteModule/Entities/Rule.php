@@ -124,7 +124,7 @@ class Rule
     public function __construct($conditionString, $targetString, $flagString)
     {
         // Set the raw string properties and append our default operand to the condition string
-        $this->conditionString = $conditionString = $conditionString . self::DEFAULT_OPERAND;
+        $this->conditionString = $conditionString = $conditionString . $this->getDefaultOperand();
         $this->targetString = $targetString;
         $this->flagString = $flagString;
 
@@ -181,6 +181,16 @@ class Rule
                 $this->sortedConditions[] = $entry;
             }
         }
+    }
+
+    /**
+     * Will return the default operand of this action
+     *
+     * @return string
+     */
+    protected function getDefaultOperand()
+    {
+        return self::DEFAULT_OPERAND;
     }
 
     /**

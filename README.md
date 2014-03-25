@@ -1,6 +1,8 @@
 TechDivision_RewriteModule
 ==========================
 
+[![Latest Stable Version](https://poser.pugx.org/techdivision/rewritemodule/v/stable.png)](https://packagist.org/packages/techdivision/rewritemodule) [![Total Downloads](https://poser.pugx.org/techdivision/rewritemodule/downloads.png)](https://packagist.org/packages/techdivision/rewritemodule) [![Latest Unstable Version](https://poser.pugx.org/techdivision/rewritemodule/v/unstable.png)](https://packagist.org/packages/techdivision/rewritemodule) [![License](https://poser.pugx.org/techdivision/rewritemodule/license.png)](https://packagist.org/packages/techdivision/rewritemodule) [![Build Status](https://travis-ci.org/techdivision/TechDivision_RewriteModule.png)](https://travis-ci.org/techdivision/TechDivision_RewriteModule)
+
 What is TechDivision_RewriteModule?
 -----------------
 
