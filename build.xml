@@ -128,6 +128,7 @@
         <!-- install composer packages -->
         <exec dir="${php-target.dir}" executable="composer">
             <env key="PATH" value="${instance.base.dir}/bin:${env.PATH}"/>
+            <env key="COMPOSER_ROOT_VERSION" value="dev-master"/>
             <arg line="--no-interaction update"/>
         </exec>
     </target>
