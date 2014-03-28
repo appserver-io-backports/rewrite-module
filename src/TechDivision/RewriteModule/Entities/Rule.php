@@ -98,26 +98,26 @@ class Rule
      *
      * @const string DEFAULT_OPERAND
      */
-    const DEFAULT_OPERAND = '@$REQUEST_URI';
+    const DEFAULT_OPERAND = '@$X_REQUEST_URI';
 
     /**
      * This constant by which conditions are separated and marked as or-combined
      *
      * @const string CONDITION_OR_DELIMETER
      */
-    const CONDITION_OR_DELIMETER = '|';
+    const CONDITION_OR_DELIMETER = '{OR}';
 
     /**
      * This constant by which conditions are separated and marked as and-combined (the default)
      *
      * @const string CONDITION_AND_DELIMETER
      */
-    const CONDITION_AND_DELIMETER = ',';
+    const CONDITION_AND_DELIMETER = '{AND}';
 
     /**
      * Default constructor
      *
-     * @param string $conditionString The condition string e.g. "^_Resources/.*" or "-f|-d|-d@$REQUEST_FILENAME"
+     * @param string $conditionString The condition string e.g. "^_Resources/.*" or "-f{OR}-d{OR}-d@$REQUEST_FILENAME"
      * @param string $targetString    The target to rewrite to, might be null if we should do nothing
      * @param string $flagString      A flag string which might be added to to the rule e.g. "L" or "C,R"
      */
@@ -157,7 +157,7 @@ class Rule
             // Iterate through them and build up conditions or or-combined condition groups
             foreach ($andActionStringPieces as $andActionStringPiece) {
 
-                // Everything is and-combined (plain array) unless combined otherwise (with a "|" symbol)
+                // Everything is and-combined (plain array) unless combined otherwise (with a "{OR}" symbol)
                 // If we find an or-combination we will make a deeper array within our sorted condition array
                 if (strpos($andActionStringPiece, self::CONDITION_OR_DELIMETER) !== false) {
 
@@ -347,18 +347,18 @@ class Rule
 
             } else {
                 // Last but not least we might have gotten a relative path (most likely)
-                // Build up the REQUEST_FILENAME from DOCUMENT_ROOT and REQUEST_URI (without the query string)
+                // Build up the REQUEST_FILENAME from DOCUMENT_ROOT and X_REQUEST_URI (without the query string)
                 $serverContext->setServerVar(
                     ServerVars::SCRIPT_FILENAME,
                     $serverContext->getServerVar(ServerVars::DOCUMENT_ROOT) . DIRECTORY_SEPARATOR . $this->targetString
                 );
                 $serverContext->setServerVar(ServerVars::SCRIPT_NAME, $this->targetString);
 
-                // TODO the REQUEST_URI is the wrong thing to change, but we currently need this set
+                // Setting the X_REQUEST_URI for internal communication
                 // TODO we have to set the QUERY_STRING for the same reason
                 // Requested uri always has to begin with a slash
                 $this->targetString = '/' . ltrim($this->targetString, '/');
-                $serverContext->setServerVar(ServerVars::REQUEST_URI, $this->targetString);
+                $serverContext->setServerVar(ServerVars::X_REQUEST_URI, $this->targetString);
 
                 // Only change the query string if we have one in our target string
                 if (strpos($this->targetString, '?') !== false) {
@@ -371,7 +371,7 @@ class Rule
             // Lets tell them that we successfully made a redirect
             $serverContext->setServerVar('REDIRECT_STATUS', '200');
             // Just make sure that you check for the existence of the query string first, as it might not be set
-            $queryFreeRequestUri = $serverContext->getServerVar(ServerVars::REQUEST_URI);
+            $queryFreeRequestUri = $serverContext->getServerVar(ServerVars::X_REQUEST_URI);
             if ($serverContext->hasServerVar(ServerVars::QUERY_STRING)) {
 
                 $queryFreeRequestUri = str_replace(

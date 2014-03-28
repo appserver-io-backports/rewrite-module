@@ -29,7 +29,7 @@ which consist of three important parts:
     (instead of the `$/%/%{} syntax` of Apache).
     Backreferences are parts of the matching rule conditions which you specifically pick out via regex.
 
-    *Simple example* : A condition like `(.+)@$REQUEST_URI` would produce a back reference `$1` with the value `/index`
+    *Simple example* : A condition like `(.+)@$X_REQUEST_URI` would produce a back reference `$1` with the value `/index`
         for a requested URI `/index`. The target string `$1/welcome.html` would therefore result in a rewrite to `/index/welcome.html`
 
 - *flag string* : You can use flags similar to mod_rewrite which are used to make rules react in a certain way or

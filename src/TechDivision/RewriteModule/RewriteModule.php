@@ -230,7 +230,7 @@ class RewriteModule implements ModuleInterface
 
             $requestUrl = $this->serverContext->getServerVar(
                 ServerVars::HTTP_HOST
-            ) . $this->serverContext->getServerVar(ServerVars::REQUEST_URI);
+            ) . $this->serverContext->getServerVar(ServerVars::X_REQUEST_URI);
 
             if (!isset($this->rules[$requestUrl])) {
 
