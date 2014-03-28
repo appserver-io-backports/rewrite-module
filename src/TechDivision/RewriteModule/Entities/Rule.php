@@ -317,6 +317,24 @@ class Rule
             $backreferenceHolders = array_keys($this->matchingBackreferences);
             $backreferenceValues = array_values($this->matchingBackreferences);
 
+            // Just make sure that you check for the existence of the query string first, as it might not be set
+            $queryFreeRequestUri = $serverContext->getServerVar(ServerVars::X_REQUEST_URI);
+            if ($serverContext->hasServerVar(ServerVars::QUERY_STRING)) {
+
+                $queryFreeRequestUri = str_replace(
+                    '?' . $serverContext->getServerVar(ServerVars::QUERY_STRING),
+                    '',
+                    $queryFreeRequestUri
+                );
+
+                // Set the "redirect" query string as a backup as we might change the original
+                $serverContext->setServerVar(
+                    'REDIRECT_QUERY_STRING',
+                    $serverContext->getServerVar(ServerVars::QUERY_STRING)
+                );
+            }
+            $serverContext->setServerVar('REDIRECT_URL', $queryFreeRequestUri);
+
             // Substitute the backreferences in our operation
             $this->targetString = str_replace($backreferenceHolders, $backreferenceValues, $this->targetString);
 
@@ -334,10 +352,6 @@ class Rule
                 'R'
             ) !== false
             ) {
-                // We were passed a valid URL and should redirect to it
-                // TODO implement better flag handling
-                $serverContext->setServerVar('REDIRECT_URL', $this->targetString);
-
                 // set enhance uri to response
                 $response->addHeader(HttpProtocol::HEADER_LOCATION, $this->targetString);
                 // send redirect status
@@ -364,23 +378,11 @@ class Rule
                 if (strpos($this->targetString, '?') !== false) {
 
                     $serverContext->setServerVar(ServerVars::QUERY_STRING, substr(strstr($this->targetString, '?'), 1));
-                    $serverContext->setServerVar('REDIRECT_QUERY_STRING', substr(strstr($this->targetString, '?'), 1));
                 }
             }
 
             // Lets tell them that we successfully made a redirect
             $serverContext->setServerVar('REDIRECT_STATUS', '200');
-            // Just make sure that you check for the existence of the query string first, as it might not be set
-            $queryFreeRequestUri = $serverContext->getServerVar(ServerVars::X_REQUEST_URI);
-            if ($serverContext->hasServerVar(ServerVars::QUERY_STRING)) {
-
-                $queryFreeRequestUri = str_replace(
-                    '?' . $serverContext->getServerVar(ServerVars::QUERY_STRING),
-                    '',
-                    $queryFreeRequestUri
-                );
-            }
-            $serverContext->setServerVar('REDIRECT_URL', $queryFreeRequestUri);
         }
         // If we got the "L"-flag we have to end here, so return false
         if (strpos($this->flagString, 'L') !== false) {
