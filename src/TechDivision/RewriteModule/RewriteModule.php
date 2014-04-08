@@ -20,7 +20,6 @@ namespace TechDivision\RewriteModule;
 
 use TechDivision\Http\HttpProtocol;
 use TechDivision\WebServer\Exceptions\ModuleException;
-use TechDivision\WebServer\Modules\Parser\HtaccessParser;
 use TechDivision\WebServer\Dictionaries\ServerVars;
 use TechDivision\WebServer\Dictionaries\EnvVars;
 use TechDivision\WebServer\Interfaces\ServerContextInterface;
@@ -54,9 +53,9 @@ class RewriteModule implements ModuleInterface
     /**
      * SSL environment variables we support and need
      *
-     * @var array $supportedSslEnvironmentVars
+     * @var array $supportedEnvVars
      */
-    protected $supportedSslEnvironmentVars = array();
+    protected $supportedEnvVars = array();
 
     /**
      * This array will hold all locations (e.g. /example/websocket) we ever encountered in our live time.
@@ -164,7 +163,7 @@ class RewriteModule implements ModuleInterface
                 )
             );
 
-            $this->supportedSslEnvironmentVars = array(
+            $this->supportedEnvVars = array(
                 EnvVars::HTTPS,
                 EnvVars::SSL_PROTOCOL,
                 EnvVars::SSL_SESSION_ID,
@@ -379,7 +378,7 @@ class RewriteModule implements ModuleInterface
     protected function fillSslEnvironmentBackreferences()
     {
         // Iterate over all SSL environment variables and fill them into our backreferences
-        foreach ($this->supportedSslEnvironmentVars as $supportedSslEnvironmentVar) {
+        foreach ($this->supportedEnvVars as $supportedSslEnvironmentVar) {
 
             $this->serverBackreferences['$SSL:' . $supportedSslEnvironmentVar . ''] = '';
         }
