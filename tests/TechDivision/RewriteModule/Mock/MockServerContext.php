@@ -51,14 +51,16 @@ class MockServerContext extends ServerContext
 
         // Presetting the server vars with some default values
         $this->serverVars = array (
-            'DOCUMENT_ROOT' => '/opt/appserver/webapps/unittest',
+            'DOCUMENT_ROOT' => __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR .
+                '_files' . DIRECTORY_SEPARATOR . 'html',
             'SERVER_ADMIN' => 'admin@appserver.io',
             'SERVER_NAME' => 'unittest.local',
             'SERVER_ADDR' => '0.0.0.0',
             'SERVER_PORT' => 9080,
             'GATEWAY_INTERFACE' => 'PHP/5.5.10',
             'SERVER_SOFTWARE' => 'appserver/0.6.0beta1 (linux) (PHP 5.5.10)',
-            'SERVER_SIGNATURE' => '<address>appserver/0.6.0beta1 (linux) (PHP 5.5.10) Server at 0.0.0.0 Port 9080</address>',
+            'SERVER_SIGNATURE' =>
+                '<address>appserver/0.6.0beta1 (linux) (PHP 5.5.10) Server at 0.0.0.0 Port 9080</address>',
             'SERVER_HANDLER' => 'core',
             'SERVER_ERRORS_PAGE_TEMPLATE_PATH' => 'var/www/errors/error.phtml',
             'PATH' => '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin',

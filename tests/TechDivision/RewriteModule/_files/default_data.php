@@ -29,31 +29,20 @@ $ruleSets = array(
     array(
         'rules' => array(
             array(
-                'condition' => '^/index([/\?]*.*)',
-                'target' => '/index.do$1',
+                'condition' => '-d{OR}-f{OR}-l',
+                'target' => '',
                 'flag' => 'L'
             ),
             array(
-                'condition' => 'downloads([/\?]*.*)',
-                'target' => '/downloads.do/downloads$1',
-                'flag' => 'L'
-            ),
-            array(
-                'condition' => '^/dl([/\?]*.*)',
-                'target' => '/dl.do$1',
-                'flag' => 'L'
-            ),
-            array(
-                'condition' => '^(/\?*.*)',
-                'target' => '/index.do$1',
+                'condition' => '(.*)',
+                'target' => '/ERROR',
                 'flag' => 'L'
             )
         ),
         'map' => array(
-            '/dl/API' => '/dl.do/API',
-            '/index/test' => '/index.do/test',
-            '/imprint' => '/index.do/imprint',
-            '/index?q=dfgdsfgs&p=fsdgdfg' => '/index.do?q=dfgdsfgs&p=fsdgdfg'
+            '/index.html' => '/index.html',
+            '/test.gif' => '/test.gif',
+            '/failing_test.gif' => '/ERROR'
         )
     )
 );

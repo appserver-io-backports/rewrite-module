@@ -72,11 +72,11 @@ class RewriteModuleTest extends \PHPUnit_Framework_TestCase
     protected $mockServerContext;
 
     /**
-     * List of files which provide vital test data we will run through
+     * List of files which will not be tested during the test run
      *
-     * @var array $dataFiles
+     * @var array $excludedDataFiles
      */
-    protected $dataFiles = array('magento_data', 'appserver.io_data');
+    protected $excludedDataFiles = array('.', '..', 'html');
 
     /**
      * @var \TechDivision\Http\HttpRequest $request The request we need for processing
@@ -105,39 +105,34 @@ class RewriteModuleTest extends \PHPUnit_Framework_TestCase
         // The module has to be inited
         $this->rewriteModule->init($this->mockServerContext);
 
+        // We will collect all data files
+        $dataPath = __DIR__ . DIRECTORY_SEPARATOR . '_files' . DIRECTORY_SEPARATOR;
+        $dataFiles = scandir($dataPath);
+
         // Iterate over all data files and collect the sets of test data
-        foreach ($this->dataFiles as $dataFile) {
+        foreach ($dataFiles as $dataFile) {
 
-            // Require the different files and collect the data
-            require __DIR__ . DIRECTORY_SEPARATOR . '_files' . DIRECTORY_SEPARATOR . $dataFile . '.php';
+            // Skip the files we do not want
+            foreach ($this->excludedDataFiles as $excludedDataFile) {
 
-            // We have to filter redirects as they (instead of rewrites) have to be tested completely different!
-            // So if a rule has the R-flag set we have to pipe all corresponding data into the $redirectDataSets array
-            $containsRedirect = false;
-            foreach ($rules as $key => $rule) {
+                if (strpos($dataFile, $excludedDataFile) === 0) {
 
-                if (strpos($rule['flag'], 'R') !== false) {
-
-                    // Flag the dataset as redirect containing and remove the flag from the set
-                    $containsRedirect = true;
-                    $rules[$key]['flag'] = str_replace('R', '', $rule['flag']);
+                    continue 2;
                 }
             }
 
-            // If the dataset has a redirect in it we have to test it separately for these
-            if ($containsRedirect) {
+            // Require the different files and collect the data
+            require $dataPath . $dataFile;
 
-                $this->redirectDataSets[] = array(
-                    'rules' => $rules,
-                    'map' => $map
+            // Iterate over all rulesets and collect the rules and maps
+            foreach ($ruleSets as $ruleSet) {
+
+                // Per convention we got the variables $rules, and $map within a file
+                $this->rewriteDataSets[] = array(
+                    'rules' => $ruleSet['rules'],
+                    'map' => $ruleSet['map']
                 );
             }
-
-            // Per convention we got the variables $rules, and $map within a file
-            $this->rewriteDataSets[] = array(
-                'rules' => $rules,
-                'map' => $map
-            );
         }
 
         // Create a request and response object we can use for our processing
