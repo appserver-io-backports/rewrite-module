@@ -19,10 +19,12 @@
 
 namespace TechDivision\RewriteModule;
 
+use TechDivision\Http\HttpProtocol;
 use TechDivision\Http\HttpRequest;
 use TechDivision\Http\HttpResponse;
 use TechDivision\RewriteModule\Mock\MockServerConfig;
 use TechDivision\RewriteModule\Mock\MockServerContext;
+use TechDivision\WebServer\Dictionaries\ModuleHooks;
 use TechDivision\WebServer\Dictionaries\ModuleVars;
 use TechDivision\WebServer\Dictionaries\ServerVars;
 
@@ -129,6 +131,7 @@ class RewriteModuleTest extends \PHPUnit_Framework_TestCase
 
                 // Per convention we got the variables $rules, and $map within a file
                 $this->rewriteDataSets[$setName] = array(
+                    'redirect' => @$ruleSet['redirect'],
                     'rules' => $ruleSet['rules'],
                     'map' => $ruleSet['map']
                 );
@@ -138,7 +141,7 @@ class RewriteModuleTest extends \PHPUnit_Framework_TestCase
         // Create a request and response object we can use for our processing
         $this->request = new HttpRequest();
         $this->response = new HttpResponse();
-
+        $this->response->init();
     }
 
     /**
@@ -187,22 +190,27 @@ class RewriteModuleTest extends \PHPUnit_Framework_TestCase
             $this->mockServerContext->setServerVar(ServerVars::X_REQUEST_URI, $input);
 
             // Start the processing
-            $this->rewriteModule->process($this->request, $this->response);
+            $this->rewriteModule->process($this->request, $this->response, ModuleHooks::REQUEST_POST);
 
             // If we got a redirect we have to test differently
             if (isset($dataSet['redirect'])) {
 
                 try {
-                    // Has the header location been set at all (should be anyway)?
-                    $this->assertTrue($this->response->hasHeader(HttpProtocol::HEADER_LOCATION));
+                    // Has the header location been set at all?
+                    // If we did not match any redirect condition and will set it to the input
+                    if (!$this->response->hasHeader(HttpProtocol::HEADER_LOCATION)) {
+
+                        $this->response->addHeader(HttpProtocol::HEADER_LOCATION, $input);
+                    }
 
                     // Asserting that the header location was set correctly
-                    $this->assertSame($desiredOutput, $this->response->hasHeader(HttpProtocol::HEADER_LOCATION));
+                    $this->assertSame($desiredOutput, $this->response->getHeader(HttpProtocol::HEADER_LOCATION));
 
                 } catch (\Exception $e) {
 
                     // Do not forget to reset the response object we are using!!
                     $this->response = new HttpResponse();
+                    $this->response->init();
 
                     // Re-throw the exception
                     throw $e;

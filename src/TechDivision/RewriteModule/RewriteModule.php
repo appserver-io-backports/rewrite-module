@@ -226,7 +226,7 @@ class RewriteModule implements ModuleInterface
      */
     public function process(HttpRequestInterface $request, HttpResponseInterface $response, $hook)
     {
-        // if false hook is comming do nothing
+        // if false hook is coming do nothing
         if (ModuleHooks::REQUEST_POST !== $hook) {
             return;
         }
