@@ -125,10 +125,10 @@ class RewriteModuleTest extends \PHPUnit_Framework_TestCase
             require $dataPath . $dataFile;
 
             // Iterate over all rulesets and collect the rules and maps
-            foreach ($ruleSets as $ruleSet) {
+            foreach ($ruleSets as $setName => $ruleSet) {
 
                 // Per convention we got the variables $rules, and $map within a file
-                $this->rewriteDataSets[] = array(
+                $this->rewriteDataSets[$setName] = array(
                     'rules' => $ruleSet['rules'],
                     'map' => $ruleSet['map']
                 );
@@ -165,28 +165,284 @@ class RewriteModuleTest extends \PHPUnit_Framework_TestCase
     /*
      * Iterate over all sets of data and test the rewriting
      *
+     * @param string $testDataSet The dataset to test against
+     *
      * @return void
      */
-    public function testRewriting()
+    public function assertionEngine($testDataSet)
     {
-        // Iterate over the data sets and test them
-        foreach ($this->rewriteDataSets as $dataSet) {
+        // Do we know this dataset?
+        $this->assertArrayHasKey($testDataSet, $this->rewriteDataSets);
 
-            // We will get the rules into our module by ways of the volatile rewrites
-            $this->mockServerContext->setModuleVar(ModuleVars::VOLATILE_REWRITES, $dataSet['rules']);
+        // Get our dataset
+        $dataSet = $this->rewriteDataSets[$testDataSet];
 
-            // No iterate over the map which is combined with the rules in the dataset
-            foreach ($dataSet['map'] as $input => $desiredOutput) {
+        // We will get the rules into our module by ways of the volatile rewrites
+        $this->mockServerContext->setModuleVar(ModuleVars::VOLATILE_REWRITES, $dataSet['rules']);
 
-                // We will provide the crucial information by way of server vars
-                $this->mockServerContext->setServerVar(ServerVars::X_REQUEST_URI, $input);
+        // No iterate over the map which is combined with the rules in the dataset
+        foreach ($dataSet['map'] as $input => $desiredOutput) {
 
-                // Start the processing
-                $this->rewriteModule->process($this->request, $this->response);
+            // We will provide the crucial information by way of server vars
+            $this->mockServerContext->setServerVar(ServerVars::X_REQUEST_URI, $input);
+
+            // Start the processing
+            $this->rewriteModule->process($this->request, $this->response);
+
+            // We will catch any exception and pass it to the calling method
+            try {
 
                 // Now check if we got the same thing here
                 $this->assertSame($desiredOutput, $this->mockServerContext->getServerVar(ServerVars::X_REQUEST_URI));
+
+            } catch (\Exception $e) {
+
+                // Return the exception
+                throw $e;
             }
+        }
+
+        // Still here? Then we are successful
+        return true;
+    }
+
+    /**
+     * Test wrapper for the appserver dataset
+     *
+     * @return null
+     * @throws \Exception
+     */
+    public function testAppserver()
+    {
+        try {
+
+            // Now check if we got the same thing here
+            $this->assertionEngine('appserver');
+
+        } catch (\Exception $e) {
+
+            // Re-throw the exception
+            throw $e;
+        }
+    }
+
+    /**
+     * Test wrapper for the realFile dataset
+     *
+     * @return null
+     * @throws \Exception
+     */
+    public function testRealFile()
+    {
+        try {
+
+            // Now check if we got the same thing here
+            $this->assertionEngine('realFile');
+
+        } catch (\Exception $e) {
+
+            // Re-throw the exception
+            throw $e;
+        }
+    }
+
+    /**
+     * Test wrapper for the realDir dataset
+     *
+     * @return null
+     * @throws \Exception
+     */
+    public function testRealDir()
+    {
+        try {
+
+            // Now check if we got the same thing here
+            $this->assertionEngine('realDir');
+
+        } catch (\Exception $e) {
+
+            // Re-throw the exception
+            throw $e;
+        }
+    }
+
+    /**
+     * Test wrapper for the symlink dataset
+     *
+     * @return null
+     * @throws \Exception
+     */
+    public function testSymlink()
+    {
+        try {
+
+            // Now check if we got the same thing here
+            $this->assertionEngine('symlink');
+
+        } catch (\Exception $e) {
+
+            // Re-throw the exception
+            throw $e;
+        }
+    }
+
+    /**
+     * Test wrapper for the LFlag dataset
+     *
+     * @return null
+     * @throws \Exception
+     */
+    public function testLFlag()
+    {
+        try {
+
+            // Now check if we got the same thing here
+            $this->assertionEngine('LFlag');
+
+        } catch (\Exception $e) {
+
+            // Re-throw the exception
+            throw $e;
+        }
+    }
+
+    /**
+     * Test wrapper for the magento dataset
+     *
+     * @return null
+     * @throws \Exception
+     */
+    public function testMagento()
+    {
+        try {
+
+            // Now check if we got the same thing here
+            $this->assertionEngine('magento');
+
+        } catch (\Exception $e) {
+
+            // Re-throw the exception
+            throw $e;
+        }
+    }
+
+    /**
+     * Test wrapper for the singleBackreference dataset
+     *
+     * @return null
+     * @throws \Exception
+     */
+    public function testSingleBackreference()
+    {
+        try {
+
+            // Now check if we got the same thing here
+            $this->assertionEngine('singleBackreference');
+
+        } catch (\Exception $e) {
+
+            // Re-throw the exception
+            throw $e;
+        }
+    }
+
+    /**
+     * Test wrapper for the doubleBackreference dataset
+     *
+     * @return null
+     * @throws \Exception
+     */
+    public function testDoubleBackreference()
+    {
+        try {
+
+            // Now check if we got the same thing here
+            $this->assertionEngine('doubleBackreference');
+
+        } catch (\Exception $e) {
+
+            // Re-throw the exception
+            throw $e;
+        }
+    }
+
+    /**
+     * Test wrapper for the mixedBackreference dataset
+     *
+     * @return null
+     * @throws \Exception
+     */
+    public function testMixedBackreference()
+    {
+        try {
+
+            // Now check if we got the same thing here
+            $this->assertionEngine('mixedBackreference');
+
+        } catch (\Exception $e) {
+
+            // Re-throw the exception
+            throw $e;
+        }
+    }
+
+    /**
+     * Test wrapper for the blockingBackreferences dataset
+     *
+     * @return null
+     * @throws \Exception
+     */
+    public function testBlockingBackreferences()
+    {
+        try {
+
+            // Now check if we got the same thing here
+            $this->assertionEngine('blockingBackreferences');
+
+        } catch (\Exception $e) {
+
+            // Re-throw the exception
+            throw $e;
+        }
+    }
+
+    /**
+     * Test wrapper for the serverVars dataset
+     *
+     * @return null
+     * @throws \Exception
+     */
+    public function testServerVars()
+    {
+        try {
+
+            // Now check if we got the same thing here
+            $this->assertionEngine('serverVars');
+
+        } catch (\Exception $e) {
+
+            // Re-throw the exception
+            throw $e;
+        }
+    }
+
+    /**
+     * Test wrapper for the varCondition dataset
+     *
+     * @return null
+     * @throws \Exception
+     */
+    public function testVarCondition()
+    {
+        try {
+
+            // Now check if we got the same thing here
+            $this->assertionEngine('varCondition');
+
+        } catch (\Exception $e) {
+
+            // Re-throw the exception
+            throw $e;
         }
     }
 }

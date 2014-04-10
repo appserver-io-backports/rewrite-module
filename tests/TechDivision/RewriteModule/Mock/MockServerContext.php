@@ -51,8 +51,8 @@ class MockServerContext extends ServerContext
 
         // Presetting the server vars with some default values
         $this->serverVars = array (
-            'DOCUMENT_ROOT' => __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR .
-                '_files' . DIRECTORY_SEPARATOR . 'html',
+            'DOCUMENT_ROOT' => realpath(__DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR .
+                '_files'),
             'SERVER_ADMIN' => 'admin@appserver.io',
             'SERVER_NAME' => 'unittest.local',
             'SERVER_ADDR' => '0.0.0.0',
@@ -77,8 +77,8 @@ class MockServerContext extends ServerContext
             'HTTP_CONNECTION' => 'keep-alive',
             'REQUEST_METHOD' => 'GET',
             'QUERY_STRING' => '',
-            'REQUEST_URI' => '/',
-            'X_REQUEST_URI' => '/',
+            'REQUEST_URI' => '/html/index.html',
+            'X_REQUEST_URI' => '/html/index.html',
         );
     }
 }

@@ -247,7 +247,7 @@ class RewriteModule implements ModuleInterface
                 $this->fillSslEnvironmentBackreferences();
 
                 // Get the rules as the array they are within the config.
-                // We have to also collect any volative rules which might be set on request base.
+                // We have to also collect any volatile rules which might be set on request base.
                 // We might not even get anything, so prepare our rules accordingly
                 $volatileRewrites = array();
                 if ($this->serverContext->hasModuleVar(ModuleVars::VOLATILE_REWRITES)) {
@@ -283,7 +283,7 @@ class RewriteModule implements ModuleInterface
                 if ($rule->matches()) {
 
                     // Apply the rule. If apply() returns false this means this was the last rule to process
-                    if ($rule->apply($this->serverContext, $response) === false) {
+                    if ($rule->apply($this->serverContext, $response, $this->serverBackreferences) === false) {
 
                         break;
                     }

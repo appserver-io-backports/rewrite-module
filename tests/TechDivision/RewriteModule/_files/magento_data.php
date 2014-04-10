@@ -26,7 +26,7 @@
  * @var array $ruleSets The rewrite rule sets this test is based on
  */
 $ruleSets = array(
-    array(
+    'magento' => array(
         'rules' => array(
             array(
                 'condition' => '-d{OR}-f{OR}-l',

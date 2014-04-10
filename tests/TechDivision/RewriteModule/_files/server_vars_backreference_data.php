@@ -26,23 +26,28 @@
  * @var array $ruleSets The rewrite rule sets this test is based on
  */
 $ruleSets = array(
-    array(
+    'serverVars' => array(
         'rules' => array(
             array(
-                'condition' => '-d{OR}-f{OR}-l',
-                'target' => '',
-                'flag' => 'L'
-            ),
-            array(
-                'condition' => '(.*)',
-                'target' => '/ERROR',
+                'condition' => '.*',
+                'target' => '$REQUEST_URI@$SERVER_NAME',
                 'flag' => 'L'
             )
         ),
         'map' => array(
-            '/index.html' => '/index.html',
-            '/test.gif' => '/test.gif',
-            '/failing_test.gif' => '/ERROR'
+            '/html' => '/html/index.html@unittest.local'
+        )
+    ),
+    'varCondition' => array(
+        'rules' => array(
+            array(
+                'condition' => '(unittest).+@$SERVER_NAME',
+                'target' => '/$1',
+                'flag' => 'L'
+            )
+        ),
+        'map' => array(
+            '/html' => '/unittest'
         )
     )
 );

@@ -298,14 +298,16 @@ class Rule
     /**
      * Initiates the module
      *
-     * @param \TechDivision\WebServer\Interfaces\ServerContextInterface $serverContext The server's context instance
-     * @param \TechDivision\Http\HttpResponseInterface                  $response      The response instance
+     * @param \TechDivision\WebServer\Interfaces\ServerContextInterface $serverContext        The server's context
+     * @param \TechDivision\Http\HttpResponseInterface                  $response             The response instance
+     * @param array                                                     $serverBackreferences Server backreferences
      *
      * @return boolean
      */
     public function apply(
         ServerContextInterface $serverContext,
-        HttpResponseInterface $response
+        HttpResponseInterface $response,
+        array $serverBackreferences
     ) {
 
         // Back to our rule...
@@ -314,6 +316,8 @@ class Rule
 
             // First of all we have to resolve the target string with the backreferences of the matching condition
             // Separate the keys from the values so we can use them in str_replace
+            // And also mix in the server's backreferences for good measure
+            $this->matchingBackreferences = array_merge($this->matchingBackreferences, $serverBackreferences);
             $backreferenceHolders = array_keys($this->matchingBackreferences);
             $backreferenceValues = array_values($this->matchingBackreferences);
 
