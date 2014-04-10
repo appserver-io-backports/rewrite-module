@@ -23,6 +23,7 @@ use TechDivision\Http\HttpRequest;
 use TechDivision\Http\HttpResponse;
 use TechDivision\RewriteModule\Mock\MockServerConfig;
 use TechDivision\RewriteModule\Mock\MockServerContext;
+use TechDivision\WebServer\Dictionaries\ModuleHooks;
 use TechDivision\WebServer\Dictionaries\ModuleVars;
 use TechDivision\WebServer\Dictionaries\ServerVars;
 
@@ -187,7 +188,7 @@ class RewriteModuleTest extends \PHPUnit_Framework_TestCase
                 $this->mockServerContext->setServerVar(ServerVars::X_REQUEST_URI, $input);
 
                 // Start the processing
-                $this->rewriteModule->process($this->request, $this->response);
+                $this->rewriteModule->process($this->request, $this->response, ModuleHooks::REQUEST_POST);
 
                 // Now check if we got the same thing here
                 $this->assertSame($desiredOutput, $this->mockServerContext->getServerVar(ServerVars::X_REQUEST_URI));
