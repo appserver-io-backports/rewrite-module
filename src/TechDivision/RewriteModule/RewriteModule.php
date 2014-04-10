@@ -19,8 +19,8 @@
 namespace TechDivision\RewriteModule;
 
 use TechDivision\Http\HttpProtocol;
+use TechDivision\WebServer\Dictionaries\ModuleHooks;
 use TechDivision\WebServer\Exceptions\ModuleException;
-use TechDivision\WebServer\Modules\Parser\HtaccessParser;
 use TechDivision\WebServer\Dictionaries\ServerVars;
 use TechDivision\WebServer\Dictionaries\EnvVars;
 use TechDivision\WebServer\Interfaces\ServerContextInterface;
@@ -215,16 +215,22 @@ class RewriteModule implements ModuleInterface
     }
 
     /**
-     * Implement's module logic
+     * Implement's module logic for given hook
      *
-     * @param \TechDivision\Http\HttpRequestInterface  $request  The request instance
-     * @param \TechDivision\Http\HttpResponseInterface $response The response instance
+     * @param \TechDivision\Http\HttpRequestInterface  $request  The request object
+     * @param \TechDivision\Http\HttpResponseInterface $response The response object
+     * @param int                                      $hook     The current hook to process logic for
      *
      * @return bool
      * @throws \TechDivision\WebServer\Exceptions\ModuleException
      */
-    public function process(HttpRequestInterface $request, HttpResponseInterface $response)
+    public function process(HttpRequestInterface $request, HttpResponseInterface $response, $hook)
     {
+        // if false hook is comming do nothing
+        if (ModuleHooks::REQUEST_POST !== $hook) {
+            return;
+        }
+
         // We have to throw a ModuleException on failure, so surround the body with a try...catch block
         try {
 
