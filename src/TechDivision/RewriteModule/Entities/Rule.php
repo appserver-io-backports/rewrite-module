@@ -356,6 +356,9 @@ class Rule
                 'R'
             ) !== false
             ) {
+
+                // We have an url to redirect to!
+                $this->type = 'url';
                 // set enhance uri to response
                 $response->addHeader(HttpProtocol::HEADER_LOCATION, $this->targetString);
                 // send redirect status

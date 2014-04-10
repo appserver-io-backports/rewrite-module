@@ -26,24 +26,7 @@
  * @var array $ruleSets The rewrite rule sets this test is based on
  */
 $ruleSets = array(
-    'LFlag' => array(
-        'rules' => array(
-            array(
-                'condition' => '.*',
-                'target' => '',
-                'flag' => 'L'
-            ),
-            array(
-                'condition' => '(.*)',
-                'target' => '/ERROR',
-                'flag' => ''
-            )
-        ),
-        'map' => array(
-            '/testUri' => '/testUri'
-        )
-    ),
-    'RFlag' => array(
+    'generalRedirect' => array(
         'redirect' => true,
         'rules' => array(
             array(
@@ -53,25 +36,20 @@ $ruleSets = array(
             )
         ),
         'map' => array(
-            '/testUri' => 'https://www.google.com'
+            '/html/index.html' => 'https://www.google.com'
         )
     ),
-    'mixedFlags' => array(
+    'conditionedRedirect' => array(
         'redirect' => true,
         'rules' => array(
             array(
-                'condition' => '.*',
+                'condition' => '/you-will-not-find-me',
                 'target' => 'https://www.google.com',
-                'flag' => 'RL'
-            ),
-            array(
-                'condition' => '.*',
-                'target' => '/ERROR',
-                'flag' => ''
+                'flag' => 'R'
             )
         ),
         'map' => array(
-            '/testUri' => 'https://www.google.com'
+            '/html/index.html' => '/html/index.html'
         )
     )
 );

@@ -189,16 +189,29 @@ class RewriteModuleTest extends \PHPUnit_Framework_TestCase
             // Start the processing
             $this->rewriteModule->process($this->request, $this->response);
 
-            // We will catch any exception and pass it to the calling method
-            try {
+            // If we got a redirect we have to test differently
+            if (isset($dataSet['redirect'])) {
+
+                try {
+                    // Has the header location been set at all (should be anyway)?
+                    $this->assertTrue($this->response->hasHeader(HttpProtocol::HEADER_LOCATION));
+
+                    // Asserting that the header location was set correctly
+                    $this->assertSame($desiredOutput, $this->response->hasHeader(HttpProtocol::HEADER_LOCATION));
+
+                } catch (\Exception $e) {
+
+                    // Do not forget to reset the response object we are using!!
+                    $this->response = new HttpResponse();
+
+                    // Re-throw the exception
+                    throw $e;
+                }
+
+            } else {
 
                 // Now check if we got the same thing here
                 $this->assertSame($desiredOutput, $this->mockServerContext->getServerVar(ServerVars::X_REQUEST_URI));
-
-            } catch (\Exception $e) {
-
-                // Return the exception
-                throw $e;
             }
         }
 
@@ -298,6 +311,46 @@ class RewriteModuleTest extends \PHPUnit_Framework_TestCase
 
             // Now check if we got the same thing here
             $this->assertionEngine('LFlag');
+
+        } catch (\Exception $e) {
+
+            // Re-throw the exception
+            throw $e;
+        }
+    }
+
+    /**
+     * Test wrapper for the RFlag dataset
+     *
+     * @return null
+     * @throws \Exception
+     */
+    public function testRFlag()
+    {
+        try {
+
+            // Now check if we got the same thing here
+            $this->assertionEngine('RFlag');
+
+        } catch (\Exception $e) {
+
+            // Re-throw the exception
+            throw $e;
+        }
+    }
+
+    /**
+     * Test wrapper for the mixedFlags dataset
+     *
+     * @return null
+     * @throws \Exception
+     */
+    public function testMixedFlags()
+    {
+        try {
+
+            // Now check if we got the same thing here
+            $this->assertionEngine('mixedFlags');
 
         } catch (\Exception $e) {
 
@@ -438,6 +491,46 @@ class RewriteModuleTest extends \PHPUnit_Framework_TestCase
 
             // Now check if we got the same thing here
             $this->assertionEngine('varCondition');
+
+        } catch (\Exception $e) {
+
+            // Re-throw the exception
+            throw $e;
+        }
+    }
+
+    /**
+     * Test wrapper for the generalRedirect dataset
+     *
+     * @return null
+     * @throws \Exception
+     */
+    public function testGeneralRedirect()
+    {
+        try {
+
+            // Now check if we got the same thing here
+            $this->assertionEngine('generalRedirect');
+
+        } catch (\Exception $e) {
+
+            // Re-throw the exception
+            throw $e;
+        }
+    }
+
+    /**
+     * Test wrapper for the conditionedRedirect dataset
+     *
+     * @return null
+     * @throws \Exception
+     */
+    public function testConditionedRedirect()
+    {
+        try {
+
+            // Now check if we got the same thing here
+            $this->assertionEngine('conditionedRedirect');
 
         } catch (\Exception $e) {
 
