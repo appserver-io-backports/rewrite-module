@@ -380,7 +380,7 @@ class RewriteModule implements ModuleInterface
         // Iterate over all SSL environment variables and fill them into our backreferences
         foreach ($this->supportedEnvVars as $supportedSslEnvironmentVar) {
 
-            $this->serverBackreferences['$SSL:' . $supportedSslEnvironmentVar . ''] = '';
+            $this->serverBackreferences['$' . $supportedSslEnvironmentVar . ''] = '';
         }
     }
 
@@ -397,9 +397,6 @@ class RewriteModule implements ModuleInterface
 
             // Prefill the value
             $this->serverBackreferences['$' . $varName] = $serverVar;
-
-            // Also create for the "dynamic" substitution syntax
-            $this->serverBackreferences['$ENV:' . $varName] = $serverVar;
         }
     }
 
