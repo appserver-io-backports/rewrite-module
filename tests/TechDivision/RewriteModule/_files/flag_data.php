@@ -26,34 +26,52 @@
  * @var array $ruleSets The rewrite rule sets this test is based on
  */
 $ruleSets = array(
-    'appserver' => array(
+    'LFlag' => array(
         'rules' => array(
             array(
-                'condition' => '^/index([/\?]*.*)',
-                'target' => '/index.do$1',
+                'condition' => '.*',
+                'target' => '',
                 'flag' => 'L'
             ),
             array(
-                'condition' => 'downloads([/\?]*.*)',
-                'target' => '/downloads.do/downloads$1',
-                'flag' => 'L'
-            ),
-            array(
-                'condition' => '^/dl([/\?]*.*)',
-                'target' => '/dl.do$1',
-                'flag' => 'L'
-            ),
-            array(
-                'condition' => '^(/\?*.*)',
-                'target' => '/index.do$1',
-                'flag' => 'L'
+                'condition' => '(.*)',
+                'target' => '/ERROR',
+                'flag' => ''
             )
         ),
         'map' => array(
-            '/dl/API' => '/dl.do/API',
-            '/index/test' => '/index.do/test',
-            '/imprint' => '/index.do/imprint',
-            '/index?q=dfgdsfgs&p=fsdgdfg' => '/index.do?q=dfgdsfgs&p=fsdgdfg'
+            '/testUri' => '/testUri'
+        )
+    ),
+    'RFlag' => array(
+        'redirect' => true,
+        'rules' => array(
+            array(
+                'condition' => '.*',
+                'target' => 'https://www.google.com',
+                'flag' => 'R'
+            )
+        ),
+        'map' => array(
+            '/testUri' => 'https://www.google.com'
+        )
+    ),
+    'mixedFlags' => array(
+        'redirect' => true,
+        'rules' => array(
+            array(
+                'condition' => '.*',
+                'target' => 'https://www.google.com',
+                'flag' => 'RL'
+            ),
+            array(
+                'condition' => '.*',
+                'target' => '/ERROR',
+                'flag' => ''
+            )
+        ),
+        'map' => array(
+            '/testUri' => 'https://www.google.com'
         )
     )
 );

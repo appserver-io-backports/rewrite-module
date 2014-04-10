@@ -26,34 +26,30 @@
  * @var array $ruleSets The rewrite rule sets this test is based on
  */
 $ruleSets = array(
-    'appserver' => array(
+    'generalRedirect' => array(
+        'redirect' => true,
         'rules' => array(
             array(
-                'condition' => '^/index([/\?]*.*)',
-                'target' => '/index.do$1',
-                'flag' => 'L'
-            ),
-            array(
-                'condition' => 'downloads([/\?]*.*)',
-                'target' => '/downloads.do/downloads$1',
-                'flag' => 'L'
-            ),
-            array(
-                'condition' => '^/dl([/\?]*.*)',
-                'target' => '/dl.do$1',
-                'flag' => 'L'
-            ),
-            array(
-                'condition' => '^(/\?*.*)',
-                'target' => '/index.do$1',
-                'flag' => 'L'
+                'condition' => '.*',
+                'target' => 'https://www.google.com',
+                'flag' => 'R'
             )
         ),
         'map' => array(
-            '/dl/API' => '/dl.do/API',
-            '/index/test' => '/index.do/test',
-            '/imprint' => '/index.do/imprint',
-            '/index?q=dfgdsfgs&p=fsdgdfg' => '/index.do?q=dfgdsfgs&p=fsdgdfg'
+            '/html/index.html' => 'https://www.google.com'
+        )
+    ),
+    'conditionedRedirect' => array(
+        'redirect' => true,
+        'rules' => array(
+            array(
+                'condition' => '/you-will-not-find-me',
+                'target' => 'https://www.google.com',
+                'flag' => 'R'
+            )
+        ),
+        'map' => array(
+            '/html/index.html' => '/html/index.html'
         )
     )
 );

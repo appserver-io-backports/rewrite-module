@@ -19,6 +19,7 @@
 
 namespace TechDivision\RewriteModule;
 
+use TechDivision\Http\HttpProtocol;
 use TechDivision\Http\HttpRequest;
 use TechDivision\Http\HttpResponse;
 use TechDivision\RewriteModule\Mock\MockServerConfig;
@@ -73,11 +74,11 @@ class RewriteModuleTest extends \PHPUnit_Framework_TestCase
     protected $mockServerContext;
 
     /**
-     * List of files which provide vital test data we will run through
+     * List of files which will not be tested during the test run
      *
-     * @var array $dataFiles
+     * @var array $excludedDataFiles
      */
-    protected $dataFiles = array('magento_data', 'appserver.io_data');
+    protected $excludedDataFiles = array('.', '..', 'html');
 
     /**
      * @var \TechDivision\Http\HttpRequest $request The request we need for processing
@@ -106,45 +107,41 @@ class RewriteModuleTest extends \PHPUnit_Framework_TestCase
         // The module has to be inited
         $this->rewriteModule->init($this->mockServerContext);
 
+        // We will collect all data files
+        $dataPath = __DIR__ . DIRECTORY_SEPARATOR . '_files' . DIRECTORY_SEPARATOR;
+        $dataFiles = scandir($dataPath);
+
         // Iterate over all data files and collect the sets of test data
-        foreach ($this->dataFiles as $dataFile) {
+        foreach ($dataFiles as $dataFile) {
 
-            // Require the different files and collect the data
-            require __DIR__ . DIRECTORY_SEPARATOR . '_files' . DIRECTORY_SEPARATOR . $dataFile . '.php';
+            // Skip the files we do not want
+            foreach ($this->excludedDataFiles as $excludedDataFile) {
 
-            // We have to filter redirects as they (instead of rewrites) have to be tested completely different!
-            // So if a rule has the R-flag set we have to pipe all corresponding data into the $redirectDataSets array
-            $containsRedirect = false;
-            foreach ($rules as $key => $rule) {
+                if (strpos($dataFile, $excludedDataFile) === 0) {
 
-                if (strpos($rule['flag'], 'R') !== false) {
-
-                    // Flag the dataset as redirect containing and remove the flag from the set
-                    $containsRedirect = true;
-                    $rules[$key]['flag'] = str_replace('R', '', $rule['flag']);
+                    continue 2;
                 }
             }
 
-            // If the dataset has a redirect in it we have to test it separately for these
-            if ($containsRedirect) {
+            // Require the different files and collect the data
+            require $dataPath . $dataFile;
 
-                $this->redirectDataSets[] = array(
-                    'rules' => $rules,
-                    'map' => $map
+            // Iterate over all rulesets and collect the rules and maps
+            foreach ($ruleSets as $setName => $ruleSet) {
+
+                // Per convention we got the variables $rules, and $map within a file
+                $this->rewriteDataSets[$setName] = array(
+                    'redirect' => @$ruleSet['redirect'],
+                    'rules' => $ruleSet['rules'],
+                    'map' => $ruleSet['map']
                 );
             }
-
-            // Per convention we got the variables $rules, and $map within a file
-            $this->rewriteDataSets[] = array(
-                'rules' => $rules,
-                'map' => $map
-            );
         }
 
         // Create a request and response object we can use for our processing
         $this->request = new HttpRequest();
         $this->response = new HttpResponse();
-
+        $this->response->init();
     }
 
     /**
@@ -171,28 +168,382 @@ class RewriteModuleTest extends \PHPUnit_Framework_TestCase
     /*
      * Iterate over all sets of data and test the rewriting
      *
+     * @param string $testDataSet The dataset to test against
+     *
      * @return void
      */
-    public function testRewriting()
+    public function assertionEngine($testDataSet)
     {
-        // Iterate over the data sets and test them
-        foreach ($this->rewriteDataSets as $dataSet) {
+        // Do we know this dataset?
+        $this->assertArrayHasKey($testDataSet, $this->rewriteDataSets);
 
-            // We will get the rules into our module by ways of the volatile rewrites
-            $this->mockServerContext->setModuleVar(ModuleVars::VOLATILE_REWRITES, $dataSet['rules']);
+        // Get our dataset
+        $dataSet = $this->rewriteDataSets[$testDataSet];
 
-            // No iterate over the map which is combined with the rules in the dataset
-            foreach ($dataSet['map'] as $input => $desiredOutput) {
+        // We will get the rules into our module by ways of the volatile rewrites
+        $this->mockServerContext->setModuleVar(ModuleVars::VOLATILE_REWRITES, $dataSet['rules']);
 
-                // We will provide the crucial information by way of server vars
-                $this->mockServerContext->setServerVar(ServerVars::X_REQUEST_URI, $input);
+        // No iterate over the map which is combined with the rules in the dataset
+        foreach ($dataSet['map'] as $input => $desiredOutput) {
 
-                // Start the processing
-                $this->rewriteModule->process($this->request, $this->response, ModuleHooks::REQUEST_POST);
+            // We will provide the crucial information by way of server vars
+            $this->mockServerContext->setServerVar(ServerVars::X_REQUEST_URI, $input);
+
+            // Start the processing
+            $this->rewriteModule->process($this->request, $this->response, ModuleHooks::REQUEST_POST);
+
+            // If we got a redirect we have to test differently
+            if (isset($dataSet['redirect'])) {
+
+                try {
+                    // Has the header location been set at all?
+                    // If we did not match any redirect condition and will set it to the input
+                    if (!$this->response->hasHeader(HttpProtocol::HEADER_LOCATION)) {
+
+                        $this->response->addHeader(HttpProtocol::HEADER_LOCATION, $input);
+                    }
+
+                    // Asserting that the header location was set correctly
+                    $this->assertSame($desiredOutput, $this->response->getHeader(HttpProtocol::HEADER_LOCATION));
+
+                } catch (\Exception $e) {
+
+                    // Do not forget to reset the response object we are using!!
+                    $this->response = new HttpResponse();
+                    $this->response->init();
+
+                    // Re-throw the exception
+                    throw $e;
+                }
+
+            } else {
 
                 // Now check if we got the same thing here
                 $this->assertSame($desiredOutput, $this->mockServerContext->getServerVar(ServerVars::X_REQUEST_URI));
             }
+        }
+
+        // Still here? Then we are successful
+        return true;
+    }
+
+    /**
+     * Test wrapper for the appserver dataset
+     *
+     * @return null
+     * @throws \Exception
+     */
+    public function testAppserver()
+    {
+        try {
+
+            // Now check if we got the same thing here
+            $this->assertionEngine('appserver');
+
+        } catch (\Exception $e) {
+
+            // Re-throw the exception
+            throw $e;
+        }
+    }
+
+    /**
+     * Test wrapper for the realFile dataset
+     *
+     * @return null
+     * @throws \Exception
+     */
+    public function testRealFile()
+    {
+        try {
+
+            // Now check if we got the same thing here
+            $this->assertionEngine('realFile');
+
+        } catch (\Exception $e) {
+
+            // Re-throw the exception
+            throw $e;
+        }
+    }
+
+    /**
+     * Test wrapper for the realDir dataset
+     *
+     * @return null
+     * @throws \Exception
+     */
+    public function testRealDir()
+    {
+        try {
+
+            // Now check if we got the same thing here
+            $this->assertionEngine('realDir');
+
+        } catch (\Exception $e) {
+
+            // Re-throw the exception
+            throw $e;
+        }
+    }
+
+    /**
+     * Test wrapper for the symlink dataset
+     *
+     * @return null
+     * @throws \Exception
+     */
+    public function testSymlink()
+    {
+        try {
+
+            // Now check if we got the same thing here
+            $this->assertionEngine('symlink');
+
+        } catch (\Exception $e) {
+
+            // Re-throw the exception
+            throw $e;
+        }
+    }
+
+    /**
+     * Test wrapper for the LFlag dataset
+     *
+     * @return null
+     * @throws \Exception
+     */
+    public function testLFlag()
+    {
+        try {
+
+            // Now check if we got the same thing here
+            $this->assertionEngine('LFlag');
+
+        } catch (\Exception $e) {
+
+            // Re-throw the exception
+            throw $e;
+        }
+    }
+
+    /**
+     * Test wrapper for the RFlag dataset
+     *
+     * @return null
+     * @throws \Exception
+     */
+    public function testRFlag()
+    {
+        try {
+
+            // Now check if we got the same thing here
+            $this->assertionEngine('RFlag');
+
+        } catch (\Exception $e) {
+
+            // Re-throw the exception
+            throw $e;
+        }
+    }
+
+    /**
+     * Test wrapper for the mixedFlags dataset
+     *
+     * @return null
+     * @throws \Exception
+     */
+    public function testMixedFlags()
+    {
+        try {
+
+            // Now check if we got the same thing here
+            $this->assertionEngine('mixedFlags');
+
+        } catch (\Exception $e) {
+
+            // Re-throw the exception
+            throw $e;
+        }
+    }
+
+    /**
+     * Test wrapper for the magento dataset
+     *
+     * @return null
+     * @throws \Exception
+     */
+    public function testMagento()
+    {
+        try {
+
+            // Now check if we got the same thing here
+            $this->assertionEngine('magento');
+
+        } catch (\Exception $e) {
+
+            // Re-throw the exception
+            throw $e;
+        }
+    }
+
+    /**
+     * Test wrapper for the singleBackreference dataset
+     *
+     * @return null
+     * @throws \Exception
+     */
+    public function testSingleBackreference()
+    {
+        try {
+
+            // Now check if we got the same thing here
+            $this->assertionEngine('singleBackreference');
+
+        } catch (\Exception $e) {
+
+            // Re-throw the exception
+            throw $e;
+        }
+    }
+
+    /**
+     * Test wrapper for the doubleBackreference dataset
+     *
+     * @return null
+     * @throws \Exception
+     */
+    public function testDoubleBackreference()
+    {
+        try {
+
+            // Now check if we got the same thing here
+            $this->assertionEngine('doubleBackreference');
+
+        } catch (\Exception $e) {
+
+            // Re-throw the exception
+            throw $e;
+        }
+    }
+
+    /**
+     * Test wrapper for the mixedBackreference dataset
+     *
+     * @return null
+     * @throws \Exception
+     */
+    public function testMixedBackreference()
+    {
+        try {
+
+            // Now check if we got the same thing here
+            $this->assertionEngine('mixedBackreference');
+
+        } catch (\Exception $e) {
+
+            // Re-throw the exception
+            throw $e;
+        }
+    }
+
+    /**
+     * Test wrapper for the blockingBackreferences dataset
+     *
+     * @return null
+     * @throws \Exception
+     */
+    public function testBlockingBackreferences()
+    {
+        try {
+
+            // Now check if we got the same thing here
+            $this->assertionEngine('blockingBackreferences');
+
+        } catch (\Exception $e) {
+
+            // Re-throw the exception
+            throw $e;
+        }
+    }
+
+    /**
+     * Test wrapper for the serverVars dataset
+     *
+     * @return null
+     * @throws \Exception
+     */
+    public function testServerVars()
+    {
+        try {
+
+            // Now check if we got the same thing here
+            $this->assertionEngine('serverVars');
+
+        } catch (\Exception $e) {
+
+            // Re-throw the exception
+            throw $e;
+        }
+    }
+
+    /**
+     * Test wrapper for the varCondition dataset
+     *
+     * @return null
+     * @throws \Exception
+     */
+    public function testVarCondition()
+    {
+        try {
+
+            // Now check if we got the same thing here
+            $this->assertionEngine('varCondition');
+
+        } catch (\Exception $e) {
+
+            // Re-throw the exception
+            throw $e;
+        }
+    }
+
+    /**
+     * Test wrapper for the generalRedirect dataset
+     *
+     * @return null
+     * @throws \Exception
+     */
+    public function testGeneralRedirect()
+    {
+        try {
+
+            // Now check if we got the same thing here
+            $this->assertionEngine('generalRedirect');
+
+        } catch (\Exception $e) {
+
+            // Re-throw the exception
+            throw $e;
+        }
+    }
+
+    /**
+     * Test wrapper for the conditionedRedirect dataset
+     *
+     * @return null
+     * @throws \Exception
+     */
+    public function testConditionedRedirect()
+    {
+        try {
+
+            // Now check if we got the same thing here
+            $this->assertionEngine('conditionedRedirect');
+
+        } catch (\Exception $e) {
+
+            // Re-throw the exception
+            throw $e;
         }
     }
 }

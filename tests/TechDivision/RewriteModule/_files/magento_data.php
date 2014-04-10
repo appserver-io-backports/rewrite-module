@@ -21,26 +21,28 @@
  * This list contains rewrite rules as they would be used within our server configuration.
  * To make tests independent from config parsing we have to provide them already split up.
  *
- * @var array $rules The rewrite rules this test is based on
- */
-$rules = array(
-    array(
-        'condition' => '-d{OR}-f{OR}-l',
-        'target' => '',
-        'flag' => 'L'),
-    array(
-        'condition' => '(.*){AND}!^/index\.php',
-        'target' => '/index.php$1',
-        'flag' => 'L')
-);
-
-/**
  * This map contains URI pairs of the sort "incoming URI" => "expected URI after rewrite"
  *
- * @var array $map The map of URIs to rewrite
+ * @var array $ruleSets The rewrite rule sets this test is based on
  */
-$map = array(
-    '/de_de/test-html.html' => '/index.php/de_de/test-html.html',
-    '/de_de/test-category.html?p=123' => '/index.php/de_de/test-category.html?p=123',
-    '/index.php/de_de/test-html.html' => '/index.php/de_de/test-html.html'
+$ruleSets = array(
+    'magento' => array(
+        'rules' => array(
+            array(
+                'condition' => '-d{OR}-f{OR}-l',
+                'target' => '',
+                'flag' => 'L'
+            ),
+            array(
+                'condition' => '(.*){AND}!^/index\.php',
+                'target' => '/index.php$1',
+                'flag' => 'L'
+            )
+        ),
+        'map' => array(
+            '/de_de/test-html.html' => '/index.php/de_de/test-html.html',
+            '/de_de/test-category.html?p=123' => '/index.php/de_de/test-category.html?p=123',
+            '/index.php/de_de/test-html.html' => '/index.php/de_de/test-html.html'
+        )
+    )
 );

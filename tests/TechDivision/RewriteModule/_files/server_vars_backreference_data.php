@@ -26,34 +26,28 @@
  * @var array $ruleSets The rewrite rule sets this test is based on
  */
 $ruleSets = array(
-    'appserver' => array(
+    'serverVars' => array(
         'rules' => array(
             array(
-                'condition' => '^/index([/\?]*.*)',
-                'target' => '/index.do$1',
-                'flag' => 'L'
-            ),
-            array(
-                'condition' => 'downloads([/\?]*.*)',
-                'target' => '/downloads.do/downloads$1',
-                'flag' => 'L'
-            ),
-            array(
-                'condition' => '^/dl([/\?]*.*)',
-                'target' => '/dl.do$1',
-                'flag' => 'L'
-            ),
-            array(
-                'condition' => '^(/\?*.*)',
-                'target' => '/index.do$1',
+                'condition' => '.*',
+                'target' => '$REQUEST_URI@$SERVER_NAME',
                 'flag' => 'L'
             )
         ),
         'map' => array(
-            '/dl/API' => '/dl.do/API',
-            '/index/test' => '/index.do/test',
-            '/imprint' => '/index.do/imprint',
-            '/index?q=dfgdsfgs&p=fsdgdfg' => '/index.do?q=dfgdsfgs&p=fsdgdfg'
+            '/html' => '/html/index.html@unittest.local'
+        )
+    ),
+    'varCondition' => array(
+        'rules' => array(
+            array(
+                'condition' => '(unittest).+@$SERVER_NAME',
+                'target' => '/$1',
+                'flag' => 'L'
+            )
+        ),
+        'map' => array(
+            '/html' => '/unittest'
         )
     )
 );

@@ -226,7 +226,7 @@ class RewriteModule implements ModuleInterface
      */
     public function process(HttpRequestInterface $request, HttpResponseInterface $response, $hook)
     {
-        // if false hook is comming do nothing
+        // if false hook is coming do nothing
         if (ModuleHooks::REQUEST_POST !== $hook) {
             return;
         }
@@ -254,7 +254,7 @@ class RewriteModule implements ModuleInterface
                 $this->fillSslEnvironmentBackreferences();
 
                 // Get the rules as the array they are within the config.
-                // We have to also collect any volative rules which might be set on request base.
+                // We have to also collect any volatile rules which might be set on request base.
                 // We might not even get anything, so prepare our rules accordingly
                 $volatileRewrites = array();
                 if ($this->serverContext->hasModuleVar(ModuleVars::VOLATILE_REWRITES)) {
@@ -290,7 +290,7 @@ class RewriteModule implements ModuleInterface
                 if ($rule->matches()) {
 
                     // Apply the rule. If apply() returns false this means this was the last rule to process
-                    if ($rule->apply($this->serverContext, $response) === false) {
+                    if ($rule->apply($this->serverContext, $response, $this->serverBackreferences) === false) {
 
                         break;
                     }
@@ -387,7 +387,7 @@ class RewriteModule implements ModuleInterface
         // Iterate over all SSL environment variables and fill them into our backreferences
         foreach ($this->supportedEnvVars as $supportedSslEnvironmentVar) {
 
-            $this->serverBackreferences['$SSL:' . $supportedSslEnvironmentVar . ''] = '';
+            $this->serverBackreferences['$' . $supportedSslEnvironmentVar . ''] = '';
         }
     }
 
@@ -404,9 +404,6 @@ class RewriteModule implements ModuleInterface
 
             // Prefill the value
             $this->serverBackreferences['$' . $varName] = $serverVar;
-
-            // Also create for the "dynamic" substitution syntax
-            $this->serverBackreferences['$ENV:' . $varName] = $serverVar;
         }
     }
 
