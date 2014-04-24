@@ -49,6 +49,9 @@ class MockServerContext extends ServerContext
         // Set the server config
         $this->serverConfig = $serverConfig;
 
+        // We need the envVars array, as we are not initing it correctly
+        $this->envVars = array();
+
         // Presetting the server vars with some default values
         $this->serverVars = array (
             'DOCUMENT_ROOT' => realpath(__DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR .
