@@ -392,7 +392,8 @@ class RewriteModule implements ModuleInterface
     }
 
     /**
-     * Initiates the module
+     * Something we might need within conditions or target definitions are server and environment variables.
+     * So add them.
      *
      * @throws \TechDivision\WebServer\Exceptions\ModuleException
      *
@@ -400,10 +401,18 @@ class RewriteModule implements ModuleInterface
      */
     protected function fillContextBackreferences()
     {
+        // Iterate over all server variables and add them to the backreference array
         foreach ($this->serverContext->getServerVars() as $varName => $serverVar) {
 
             // Prefill the value
             $this->serverBackreferences['$' . $varName] = $serverVar;
+        }
+
+        // Do the same for environment variables
+        foreach ($this->serverContext->getEnvVars() as $varName => $envVar) {
+
+            // Prefill the value
+            $this->serverBackreferences['$' . $varName] = $envVar;
         }
     }
 
