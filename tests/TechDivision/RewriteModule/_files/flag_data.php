@@ -62,7 +62,7 @@ $ruleSets = array(
             array(
                 'condition' => '.*',
                 'target' => 'https://www.google.com',
-                'flag' => 'RL'
+                'flag' => 'R,L'
             ),
             array(
                 'condition' => '.*',

@@ -223,14 +223,13 @@ class Rule
             $flagPieces = explode(self::FLAG_PARAMETER_ASSIGNER, $flag);
 
             // Set the pieces (if any)
-            if (isset($flagPieces[1])) {
+            if (array_key_exists(1, $flagPieces)) {
 
                 $flags[$flagPieces[0]] = $flagPieces[1];
 
             } else {
 
                 $flags[$flagPieces[0]] = null;
-
             }
         }
 
@@ -373,7 +372,7 @@ class Rule
 
         // If we got a target map (flag "M") we have to resolve the target string we have to use first
         // The following checks will be treated as an additional condition
-        if (isset($this->sortedFlags[RuleFlags::MAP]) && !empty($this->sortedFlags[RuleFlags::MAP])) {
+        if (array_key_exists(RuleFlags::MAP, $this->sortedFlags) && !empty($this->sortedFlags[RuleFlags::MAP])) {
 
             // We got a map! Now check if we know how to resolve it
             if (!isset($this->matchingBackreferences[$this->sortedFlags[RuleFlags::MAP]])) {
@@ -472,7 +471,7 @@ class Rule
             $serverContext->setServerVar('REDIRECT_STATUS', '200');
         }
         // If we got the "LAST"-flag we have to end here, so return false
-        if (isset($this->sortedFlags[RuleFlags::LAST])) {
+        if (array_key_exists(RuleFlags::LAST, $this->sortedFlags)) {
 
             return false;
         }
