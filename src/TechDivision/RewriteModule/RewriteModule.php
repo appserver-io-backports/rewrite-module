@@ -305,45 +305,6 @@ class RewriteModule implements ModuleInterface
     }
 
     /**
-     * Will return the configuration
-     *
-     * @param string $uri The requested uri we need the configuration for
-     *
-     * @return array
-     */
-    protected function getLocationConfig($uri)
-    {
-        // We have to check if we already got the config
-        if (isset($this->locations[$uri]) && isset($this->configs[$this->locations[$uri]])) {
-
-            $config = $this->configs[$this->locations[$uri]];
-
-            // Is the config recent?
-            if ($fileInfo = new \SplFileInfo($config->getConfigPath())) {
-
-                if ($fileInfo->getMTime() == $config->getMTime()) {
-
-                    return $config;
-                }
-            }
-        }
-
-        // As we are still here it is safe to assume that we have to reparse the configuration for this location
-        // as there might have been changes
-        $configParser = new HtaccessParser();
-
-        // Save the config for later use
-        $config = $configParser->getConfigForFile(
-            $this->serverBackreferences['$DOCUMENT_ROOT'],
-            $uri
-        );
-        $this->locations[$uri] = $config->getConfigPath();
-        $this->configs[$config->getConfigPath()] = $config;
-
-        return $config;
-    }
-
-    /**
      * Will fill the header variables into our pre-collected $serverVars array
      *
      * @param \TechDivision\Http\HttpRequestInterface $request The request instance
