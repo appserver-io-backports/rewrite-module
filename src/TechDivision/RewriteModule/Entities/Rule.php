@@ -222,7 +222,16 @@ class Rule
 
             $flagPieces = explode(self::FLAG_PARAMETER_ASSIGNER, $flag);
 
-            $flags[$flagPieces[0]] = $flagPieces[1];
+            // Set the pieces (if any)
+            if (isset($flagPieces[1])) {
+
+                $flags[$flagPieces[0]] = $flagPieces[1];
+
+            } else {
+
+                $flags[$flagPieces[0]] = null;
+
+            }
         }
 
         return $flags;
