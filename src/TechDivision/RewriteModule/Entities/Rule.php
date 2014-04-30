@@ -24,6 +24,7 @@ use TechDivision\Http\HttpProtocol;
 use TechDivision\Http\HttpRequestInterface;
 use TechDivision\Http\HttpResponseInterface;
 use TechDivision\Http\HttpResponseStates;
+use TechDivision\RewriteModule\Dictionaries\RuleFlags;
 use TechDivision\WebServer\Dictionaries\ServerVars;
 use TechDivision\WebServer\Interfaces\ServerContextInterface;
 
@@ -82,9 +83,9 @@ class Rule
     /**
      * The target to rewrite the REDIRECT_URL to
      *
-     * @var string $targetString
+     * @var string $target
      */
-    protected $targetString;
+    protected $target;
 
     /**
      * The flag we have to take into consideration when working with the rule
@@ -92,6 +93,13 @@ class Rule
      * @var string $flagString
      */
     protected $flagString;
+
+    /**
+     * All flags sorted and brought in relation with their potential parameters
+     *
+     * @var array $sortedFlags
+     */
+    protected $sortedFlags;
 
     /**
      * The default operand we will check all conditions against if none was given explicitly
@@ -115,18 +123,35 @@ class Rule
     const CONDITION_AND_DELIMETER = '{AND}';
 
     /**
+     * This constant is used to separate flags from each other
+     *
+     * @const string FLAG_DELIMETER
+     */
+    const FLAG_DELIMETER = ',';
+
+    /**
+     * This constant is used to separate flags from their potential parameters
+     *
+     * @const string FLAG_PARAMETER_ASSIGNER
+     */
+    const FLAG_PARAMETER_ASSIGNER = '=';
+
+    /**
      * Default constructor
      *
-     * @param string $conditionString The condition string e.g. "^_Resources/.*" or "-f{OR}-d{OR}-d@$REQUEST_FILENAME"
-     * @param string $targetString    The target to rewrite to, might be null if we should do nothing
-     * @param string $flagString      A flag string which might be added to to the rule e.g. "L" or "C,R"
+     * @param string       $conditionString The condition string e.g. "^_Resources/.*" or "-f{OR}-d{OR}-d@$REQUEST_FILENAME"
+     * @param string|array $target          The target to rewrite to, might be null if we should do nothing
+     * @param string       $flagString      A flag string which might be added to to the rule e.g. "L" or "C,R"
      */
-    public function __construct($conditionString, $targetString, $flagString)
+    public function __construct($conditionString, $target, $flagString)
     {
         // Set the raw string properties and append our default operand to the condition string
         $this->conditionString = $conditionString = $conditionString . $this->getDefaultOperand();
-        $this->targetString = $targetString;
+        $this->target = $target;
         $this->flagString = $flagString;
+
+        // Get the sorted flags, should be easy to break up
+        $this->sortedFlags = $this->sortFlags($this->flagString);
 
         // Set our default values here
         $this->allowedTypes = array('relative', 'absolute', 'url');
@@ -181,6 +206,26 @@ class Rule
                 $this->sortedConditions[] = $entry;
             }
         }
+    }
+
+    /**
+     * Sort the flag string as we will have a bad time parsing the string over and over again
+     *
+     * @param string $flagString The unsorted string of flags
+     *
+     * @return array
+     */
+    protected function sortFlags($flagString)
+    {
+        $flags = array();
+        foreach (explode(self::FLAG_DELIMETER, $flagString) as $flag) {
+
+            $flagPieces = explode(self::FLAG_PARAMETER_ASSIGNER, $flag);
+
+            $flags[$flagPieces[0]] = $flagPieces[1];
+        }
+
+        return $flags;
     }
 
     /**
@@ -310,16 +355,44 @@ class Rule
         array $serverBackreferences
     ) {
 
+        // First of all we have to resolve the target string with the backreferences of the matching condition
+        // Separate the keys from the values so we can use them in str_replace
+        // And also mix in the server's backreferences for good measure
+        $this->matchingBackreferences = array_merge($this->matchingBackreferences, $serverBackreferences);
+        $backreferenceHolders = array_keys($this->matchingBackreferences);
+        $backreferenceValues = array_values($this->matchingBackreferences);
+
+        // If we got a target map (flag "M") we have to resolve the target string we have to use first
+        // The following checks will be treated as an additional condition
+        if (isset($this->sortedFlags[RuleFlags::MAP]) && !empty($this->sortedFlags[RuleFlags::MAP])) {
+
+            // We got a map! Now check if we know how to resolve it
+            if (!isset($this->matchingBackreferences[$this->sortedFlags[RuleFlags::MAP]])) {
+
+                throw new \InvalidArgumentException(
+                    'Could not find a matching (back)reference for flag key ' .
+                    $this->sortedFlags[RuleFlags::MAP]
+                );
+            }
+
+            // Get our map key for better readability
+            $mapKey = $this->matchingBackreferences[$this->sortedFlags[RuleFlags::MAP]];
+
+            // Still here? That sounds good. Get the needed target string now
+            if (isset($this->target[$mapKey])) {
+
+                $this->target = $this->target[$mapKey];
+
+            } else {
+
+                // Empty string, we will do nothing with this rule
+                $this->target = '';
+            }
+        }
+
         // Back to our rule...
         // If the target string is empty we do not have to do anything
-        if (!empty($this->targetString)) {
-
-            // First of all we have to resolve the target string with the backreferences of the matching condition
-            // Separate the keys from the values so we can use them in str_replace
-            // And also mix in the server's backreferences for good measure
-            $this->matchingBackreferences = array_merge($this->matchingBackreferences, $serverBackreferences);
-            $backreferenceHolders = array_keys($this->matchingBackreferences);
-            $backreferenceValues = array_values($this->matchingBackreferences);
+        if (!empty($this->target)) {
 
             // Just make sure that you check for the existence of the query string first, as it might not be set
             $queryFreeRequestUri = $serverContext->getServerVar(ServerVars::X_REQUEST_URI);
@@ -340,27 +413,25 @@ class Rule
             $serverContext->setServerVar('REDIRECT_URL', $queryFreeRequestUri);
 
             // Substitute the backreferences in our operation
-            $this->targetString = str_replace($backreferenceHolders, $backreferenceValues, $this->targetString);
+            $this->target = str_replace($backreferenceHolders, $backreferenceValues, $this->target);
 
             // We have to find out what type of rule we got here
-            if (is_readable($this->targetString)) {
+            if (is_readable($this->target)) {
 
                 // We have an absolute file path!
                 $this->type = 'absolute';
 
                 // Set the REQUEST_FILENAME path
-                $serverContext->setServerVar(ServerVars::REQUEST_FILENAME, $this->targetString);
+                $serverContext->setServerVar(ServerVars::REQUEST_FILENAME, $this->target);
 
-            } elseif (filter_var($this->targetString, FILTER_VALIDATE_URL) && strpos(
-                $this->flagString,
-                'R'
-            ) !== false
+            } elseif (filter_var($this->target, FILTER_VALIDATE_URL) !== false &&
+                array_key_exists(RuleFlags::REDIRECT, $this->sortedFlags)
             ) {
 
                 // We have an url to redirect to!
                 $this->type = 'url';
                 // set enhance uri to response
-                $response->addHeader(HttpProtocol::HEADER_LOCATION, $this->targetString);
+                $response->addHeader(HttpProtocol::HEADER_LOCATION, $this->target);
                 // send redirect status
                 $response->setStatusCode(301);
                 // set response state to be dispatched after this without calling other modules process
@@ -371,28 +442,28 @@ class Rule
                 // Build up the REQUEST_FILENAME from DOCUMENT_ROOT and X_REQUEST_URI (without the query string)
                 $serverContext->setServerVar(
                     ServerVars::SCRIPT_FILENAME,
-                    $serverContext->getServerVar(ServerVars::DOCUMENT_ROOT) . DIRECTORY_SEPARATOR . $this->targetString
+                    $serverContext->getServerVar(ServerVars::DOCUMENT_ROOT) . DIRECTORY_SEPARATOR . $this->target
                 );
-                $serverContext->setServerVar(ServerVars::SCRIPT_NAME, $this->targetString);
+                $serverContext->setServerVar(ServerVars::SCRIPT_NAME, $this->target);
 
                 // Setting the X_REQUEST_URI for internal communication
                 // TODO we have to set the QUERY_STRING for the same reason
                 // Requested uri always has to begin with a slash
-                $this->targetString = '/' . ltrim($this->targetString, '/');
-                $serverContext->setServerVar(ServerVars::X_REQUEST_URI, $this->targetString);
+                $this->target = '/' . ltrim($this->target, '/');
+                $serverContext->setServerVar(ServerVars::X_REQUEST_URI, $this->target);
 
                 // Only change the query string if we have one in our target string
-                if (strpos($this->targetString, '?') !== false) {
+                if (strpos($this->target, '?') !== false) {
 
-                    $serverContext->setServerVar(ServerVars::QUERY_STRING, substr(strstr($this->targetString, '?'), 1));
+                    $serverContext->setServerVar(ServerVars::QUERY_STRING, substr(strstr($this->target, '?'), 1));
                 }
             }
 
             // Lets tell them that we successfully made a redirect
             $serverContext->setServerVar('REDIRECT_STATUS', '200');
         }
-        // If we got the "L"-flag we have to end here, so return false
-        if (strpos($this->flagString, 'L') !== false) {
+        // If we got the "LAST"-flag we have to end here, so return false
+        if (isset($this->sortedFlags[RuleFlags::LAST])) {
 
             return false;
         }
@@ -463,8 +534,8 @@ class Rule
      *
      * @return string
      */
-    public function getTargetString()
+    public function getTarget()
     {
-        return $this->targetString;
+        return $this->target;
     }
 }
