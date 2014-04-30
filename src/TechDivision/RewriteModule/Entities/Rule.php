@@ -395,6 +395,12 @@ class Rule
 
                 // Empty string, we will do nothing with this rule
                 $this->target = '';
+
+                // Also clear any L-flag we might find, we could not find what we are looking for so we should not end
+                if (array_key_exists(RuleFlags::LAST, $this->sortedFlags)) {
+
+                    unset($this->sortedFlags[RuleFlags::LAST]);
+                }
             }
         }
 
