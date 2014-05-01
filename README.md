@@ -79,9 +79,16 @@ So `!^([0-9]+)` would match all strings which do NOT begin with a number and `!-
 
 Flags
 -----------------
+Flags are used to further influence processing.
+You can specify as many flags per rewrite as you like, but be aware of their impact!
+Syntax for several flags is simple: just separate them with a `,` symbol.
+Flags which might accept a parameter can be assigned one by using the `=` symbol.
 Currently supported flags are:
 
 - *L* : As rules are normally processed one after the other, the `L` flag will make the flagged rule the last one processed
     if matched.
 
 - *R* : If this flag is set and the `target string` is a valid URL we will make a redirect instead of a rewrite
+
+- *M* : Stands for map. Using this flag you can specify an external source (have a look at the Injector classes of the WebServer project) of a target map.
+    With `M=<MY_BACKREFERENCE>` you can specify what the map's index has to match. This matching is done **only** if the rewrite condition matches and will behave as another condition
