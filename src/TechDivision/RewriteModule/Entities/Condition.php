@@ -20,6 +20,9 @@
 
 namespace TechDivision\RewriteModule\Entities;
 
+use TechDivision\RewriteModule\Dictionaries\ConditionActions;
+use TechDivision\WebServer\Dictionaries\ServerVars;
+
 /**
  * TechDivision\RewriteModule\Entities\Condition
  *
@@ -72,19 +75,19 @@ class Condition
     protected $operand;
 
     /**
+     * In some cases, e.g. string comparison or regex, we need another operand to work with
+     *
+     * @var string $additionalOperand
+     */
+    protected $additionalOperand;
+
+    /**
      * How the operand has to be checked, this will hold the needed action as a string and cannot be
      * processed automatically.
      *
      * @var string $action
      */
     protected $action;
-
-    /**
-     * This is a combination of the operand and the action to perform, wrapped in an eval-able string
-     *
-     * @var string $operation
-     */
-    protected $operation;
 
     /**
      * Modifier which should be used to integrate things like apache flags and others
@@ -116,14 +119,14 @@ class Condition
         // Fill the default values for our members here
         $this->allowedTypes = array('regex', 'check');
         $this->htaccessAdditions = array(
-            '<' => 'strcmp(\'#1\', \'#2\') < 0',
-            '>' => 'strcmp(\'#1\', \'#2\') > 0',
-            '=' => 'strcmp(\'#1\', \'#2\') == 0',
-            '-d' => 'is_dir(\'$DOCUMENT_ROOT#1\')',
-            '-f' => 'is_file(\'$DOCUMENT_ROOT#1\')',
-            '-s' => 'is_file(\'$DOCUMENT_ROOT#1\') && filesize(\'$DOCUMENT_ROOT#1\') > 0',
-            '-l' => 'is_link(\'$DOCUMENT_ROOT#1\')',
-            '-x' => 'is_executable(\'$DOCUMENT_ROOT#1\')'
+            ConditionActions::STR_LESS,
+            ConditionActions::STR_GREATER,
+            ConditionActions::STR_EQUAL,
+            ConditionActions::IS_DIR,
+            ConditionActions::IS_FILE,
+            ConditionActions::IS_USED_FILE,
+            ConditionActions::IS_LINK,
+            ConditionActions::IS_EXECUTABLE
         );
         $this->allowedModifiers = array('[NC]', '[nocase]');
 
@@ -140,6 +143,7 @@ class Condition
         $this->operand = $operand;
         $this->action = $action;
         $this->modifier = $modifier;
+        $this->additionalOperand = '';
 
         // Check if we have a negation
         if (strpos($this->action, '!') === 0) {
@@ -150,25 +154,42 @@ class Condition
             $this->action = ltrim($this->action, '!');
         }
 
-        // Preset the operation with a regex check
-        $this->type = 'regex';
-        $this->operation = 'preg_match(\'`' . $this->action . '`\', \'' . $this->operand . '\') === 1';
+        // Are we able to find any of the additions htaccess syntax offers? Per default it's regex.
+        $isRegex = true;
+        foreach ($this->htaccessAdditions as $addition) {
 
-        // Are we able to find any of the additions htaccess syntax offers?
-        foreach ($this->htaccessAdditions as $addition => $realAction) {
+            // The string has to start with an addition (any negating ! was cut of before)
+            if (strpos($this->action, $addition) === 0) {
 
-            // This only makes sense if the action is a short string, otherwise we might fall into the trap that
-            // any given regex might contain an addition string
-            if (strlen($this->action) <= 2 && strpos($this->action, $addition) !== false) {
+                // If we have a string comparing action we have to cut it to know what to compare to, otherwise we
+                // need the document root as an additional operand
+                $tmp = substr($this->action, 0, 1);
+                if ($tmp === '<' || $tmp === '>' || $tmp === '=') {
+
+                    // We have to extract the needed parts of our operation and refill it into our additional operand string
+                    $this->additionalOperand = substr($this->action, 1);
+                    $this->action = substr($this->action, 0, 1);
+
+                } else {
+
+                    // Set the placeholder for the document root, it will be resolved anyway
+                    $this->additionalOperand = '$' . ServerVars::DOCUMENT_ROOT;
+                }
 
                 // If we reach this point we are of the check type
                 $this->type = 'check';
-
-                // We have to extract the needed parts of our operation and refill it into our operation string
-                $additionPart = substr($this->action, 1);
-                $this->operation = str_replace(array('#1', '#2'), array($this->operand, $additionPart), $realAction);
                 break;
             }
+        }
+
+        // If we got a regex we have to re-organize a few things
+        if ($this->type !== 'check') {
+
+            // we have to set the type correctly, collect the regex as additional operand and set the regex flag as
+            // action to allow proper switching of functions later
+            $this->type = 'regex';
+            $this->additionalOperand = $this->action;
+            $this->action = ConditionActions::REGEX;
         }
     }
 
@@ -190,16 +211,6 @@ class Condition
     public function getOperand()
     {
         return $this->operand;
-    }
-
-    /**
-     * Getter for the $operation member
-     *
-     * @return string
-     */
-    public function getOperation()
-    {
-        return $this->operation;
     }
 
     /**
@@ -225,9 +236,9 @@ class Condition
         $backreferenceHolders = array_keys($backreferences);
         $backreferenceValues = array_values($backreferences);
 
-        // Substitute the backreferences in our operand and operation
+        // Substitute the backreferences in our operand and additionalOperand
         $this->operand = str_replace($backreferenceHolders, $backreferenceValues, $this->operand);
-        $this->operation = str_replace($backreferenceHolders, $backreferenceValues, $this->operation);
+        $this->additionalOperand = str_replace($backreferenceHolders, $backreferenceValues, $this->additionalOperand);
     }
 
     /**
@@ -238,14 +249,74 @@ class Condition
      */
     public function matches()
     {
-        if ($this->isNegated) {
+        // Switching between different actions we have to take.
+        // Using an if cascade as it seems to be faster than switch...case
+        $result = false;
+        if ($this->action === ConditionActions::REGEX) {
+            // Get the result for a regex
 
-            return eval('if (!(' . $this->operation . ')){return true;}');
+            $result = preg_match('`' . $this->additionalOperand . '`', $this->operand) === 1;
+
+        } elseif ($this->action === ConditionActions::IS_DIR) {
+            // Is it an existing directory?
+
+            $result = is_dir($this->additionalOperand . DIRECTORY_SEPARATOR . $this->operand);
+
+        } elseif ($this->action === ConditionActions::IS_EXECUTABLE) {
+            // Is the file an executable?
+
+            $result = is_dir($this->additionalOperand . DIRECTORY_SEPARATOR . $this->operand);
+
+        } elseif ($this->action === ConditionActions::IS_FILE) {
+            // Is it a regular file?
+
+            $result = is_file($this->additionalOperand . DIRECTORY_SEPARATOR . $this->operand);
+
+        } elseif ($this->action === ConditionActions::IS_LINK) {
+            // Is it a symlink?
+
+            $result = is_link($this->additionalOperand . DIRECTORY_SEPARATOR . $this->operand);
+
+        } elseif ($this->action === ConditionActions::IS_USED_FILE) {
+            // Is it a real file which has a size greater 0?
+
+            $result = is_file($this->additionalOperand . DIRECTORY_SEPARATOR . $this->operand) &&
+                filesize($this->additionalOperand . DIRECTORY_SEPARATOR . $this->operand) > 0;
+
+        } elseif ($this->action === ConditionActions::STR_EQUAL) {
+            // Or the compared strings equal
+
+            $result = strcmp($this->operand, $this->additionalOperand) == 0;
+
+        } elseif ($this->action === ConditionActions::STR_GREATER) {
+            // Is the operand bigger?
+
+            $result = strcmp($this->operand, $this->additionalOperand) > 0;
+
+        } elseif ($this->action === ConditionActions::STR_LESS) {
+            // Is the operand smaller?
+
+            $result = strcmp($this->operand, $this->additionalOperand) < 0;
 
         } else {
+            // We should not be here ...
 
-            return eval('if (' . $this->operation . '){return true;}');
+            throw new \InvalidArgumentException('Could not recognize condition check action ' . $this->action);
         }
+
+        // If we reached this point we should by any means have a boolean result
+        if (!is_bool($result)) {
+
+            return false;
+        }
+
+        // If the check got negated we will just negate what we got from our preceding checks
+        if ($this->isNegated) {
+
+            $result = !$result;
+        }
+
+        return $result;
     }
 
     /**
@@ -259,7 +330,7 @@ class Condition
         $matches = array();
         if ($this->type === 'regex') {
 
-            preg_match('`' . $this->action . '`', $this->operand, $matches);
+            preg_match('`' . $this->additionalOperand . '`', $this->operand, $matches);
 
             // Unset the first find of our backreferences, so we can use it automatically
             unset($matches[0]);

@@ -21,9 +21,9 @@
 namespace TechDivision\RewriteModule\Dictionaries;
 
 /**
- * TechDivision\RewriteModule\Dictionaries\RuleFlags
+ * TechDivision\RewriteModule\Dictionaries\ConditionActions
  *
- * This file is a dictionary for rule flags.
+ * A dictionary for actions a condition might use for testing if it matches
  *
  * @category   Appserver
  * @package    TechDivision_RewriteModule
@@ -34,14 +34,20 @@ namespace TechDivision\RewriteModule\Dictionaries;
  *             Open Software License (OSL 3.0)
  * @link       http://www.techdivision.com/
  */
-class RuleFlags
+class ConditionActions
 {
     /**
-     * Defines constant for flags we might use within the rule's flag field
+     * Basic stuff used parallel zu htaccess features
      *
      * @var string
      */
-    const REDIRECT = 'R';
-    const MAP = 'M';
-    const LAST = 'L';
+    const STR_LESS= '<';
+    const STR_GREATER = '>';
+    const STR_EQUAL = '=';
+    const IS_DIR= '-d';
+    const IS_FILE = '-f';
+    const IS_USED_FILE = '-s';
+    const IS_LINK = '-l';
+    const IS_EXECUTABLE = '-x';
+    const REGEX = '-r';
 }

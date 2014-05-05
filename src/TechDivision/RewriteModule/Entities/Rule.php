@@ -355,6 +355,8 @@ class Rule
      * @param \TechDivision\Http\HttpResponseInterface                  $response             The response instance
      * @param array                                                     $serverBackreferences Server backreferences
      *
+     * @throws \InvalidArgumentException
+     *
      * @return boolean
      */
     public function apply(
