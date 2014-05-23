@@ -25,8 +25,8 @@ use TechDivision\Http\HttpRequestInterface;
 use TechDivision\Http\HttpResponseInterface;
 use TechDivision\Http\HttpResponseStates;
 use TechDivision\RewriteModule\Dictionaries\RuleFlags;
-use TechDivision\WebServer\Dictionaries\ServerVars;
-use TechDivision\WebServer\Interfaces\ServerContextInterface;
+use TechDivision\Server\Dictionaries\ServerVars;
+use TechDivision\Server\Interfaces\ServerContextInterface;
 
 /**
  * TechDivision\RewriteModule\Entities\Rule

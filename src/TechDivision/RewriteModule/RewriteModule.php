@@ -19,15 +19,15 @@
 namespace TechDivision\RewriteModule;
 
 use TechDivision\Http\HttpProtocol;
-use TechDivision\WebServer\Dictionaries\ModuleHooks;
-use TechDivision\WebServer\Exceptions\ModuleException;
-use TechDivision\WebServer\Dictionaries\ServerVars;
-use TechDivision\WebServer\Dictionaries\EnvVars;
-use TechDivision\WebServer\Interfaces\ServerContextInterface;
+use TechDivision\Server\Dictionaries\ModuleHooks;
+use TechDivision\Server\Exceptions\ModuleException;
+use TechDivision\Server\Dictionaries\ServerVars;
+use TechDivision\Server\Dictionaries\EnvVars;
+use TechDivision\Server\Interfaces\ServerContextInterface;
 use TechDivision\Http\HttpRequestInterface;
 use TechDivision\Http\HttpResponseInterface;
-use TechDivision\WebServer\Interfaces\ModuleInterface;
-use TechDivision\WebServer\Dictionaries\ModuleVars;
+use TechDivision\Server\Interfaces\ModuleInterface;
+use TechDivision\Server\Dictionaries\ModuleVars;
 use TechDivision\RewriteModule\Entities\Rule;
 
 /**
