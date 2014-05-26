@@ -24,9 +24,9 @@ use TechDivision\Http\HttpRequest;
 use TechDivision\Http\HttpResponse;
 use TechDivision\RewriteModule\Mock\MockServerConfig;
 use TechDivision\RewriteModule\Mock\MockServerContext;
-use TechDivision\WebServer\Dictionaries\ModuleHooks;
-use TechDivision\WebServer\Dictionaries\ModuleVars;
-use TechDivision\WebServer\Dictionaries\ServerVars;
+use TechDivision\Server\Dictionaries\ModuleHooks;
+use TechDivision\Server\Dictionaries\ModuleVars;
+use TechDivision\Server\Dictionaries\ServerVars;
 
 /**
  * TechDivision\RewriteModule\RewriteModuleTest
