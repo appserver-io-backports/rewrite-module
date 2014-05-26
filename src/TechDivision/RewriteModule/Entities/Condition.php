@@ -21,7 +21,7 @@
 namespace TechDivision\RewriteModule\Entities;
 
 use TechDivision\RewriteModule\Dictionaries\ConditionActions;
-use TechDivision\WebServer\Dictionaries\ServerVars;
+use TechDivision\Server\Dictionaries\ServerVars;
 
 /**
  * TechDivision\RewriteModule\Entities\Condition
