@@ -20,8 +20,8 @@
 
 namespace TechDivision\RewriteModule\Mock;
 
-use TechDivision\WebServer\Interfaces\ServerConfigurationInterface;
-use TechDivision\WebServer\ServerContext;
+use TechDivision\Server\Interfaces\ServerConfigurationInterface;
+use TechDivision\Server\ServerContext;
 
 /**
  * TechDivision\RewriteModule\Mock\MockServerContext
