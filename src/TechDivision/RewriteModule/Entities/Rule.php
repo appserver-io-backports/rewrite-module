@@ -351,9 +351,9 @@ class Rule
     /**
      * Initiates the module
      *
-     * @param \TechDivision\WebServer\Interfaces\ServerContextInterface $serverContext        The server's context
-     * @param \TechDivision\Http\HttpResponseInterface                  $response             The response instance
-     * @param array                                                     $serverBackreferences Server backreferences
+     * @param \TechDivision\Server\Interfaces\ServerContextInterface $serverContext        The server's context
+     * @param \TechDivision\Http\HttpResponseInterface               $response             The response instance
+     * @param array                                                  $serverBackreferences Server backreferences
      *
      * @throws \InvalidArgumentException
      *

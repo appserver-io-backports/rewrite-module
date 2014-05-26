@@ -91,7 +91,7 @@ class RewriteModule implements ModuleInterface
     /**
      * The server's context instance which we preserve for later use
      *
-     * @var \TechDivision\WebServer\Interfaces\ServerContextInterface $serverContext $serverContext
+     * @var \TechDivision\Server\Interfaces\ServerContextInterface $serverContext $serverContext
      */
     protected $serverContext;
 
@@ -134,10 +134,10 @@ class RewriteModule implements ModuleInterface
     /**
      * Initiates the module
      *
-     * @param \TechDivision\WebServer\Interfaces\ServerContextInterface $serverContext The server's context instance
+     * @param \TechDivision\Server\Interfaces\ServerContextInterface $serverContext The server's context instance
      *
      * @return bool
-     * @throws \TechDivision\WebServer\Exceptions\ModuleException
+     * @throws \TechDivision\Server\Exceptions\ModuleException
      */
     public function init(ServerContextInterface $serverContext)
     {
@@ -222,7 +222,7 @@ class RewriteModule implements ModuleInterface
      * @param int                                      $hook     The current hook to process logic for
      *
      * @return bool
-     * @throws \TechDivision\WebServer\Exceptions\ModuleException
+     * @throws \TechDivision\Server\Exceptions\ModuleException
      */
     public function process(HttpRequestInterface $request, HttpResponseInterface $response, $hook)
     {
@@ -356,7 +356,7 @@ class RewriteModule implements ModuleInterface
      * Something we might need within conditions or target definitions are server and environment variables.
      * So add them.
      *
-     * @throws \TechDivision\WebServer\Exceptions\ModuleException
+     * @throws \TechDivision\Server\Exceptions\ModuleException
      *
      * @return void
      */
