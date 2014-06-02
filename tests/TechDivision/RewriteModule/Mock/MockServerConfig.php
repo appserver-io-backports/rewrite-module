@@ -20,7 +20,7 @@
 
 namespace TechDivision\RewriteModule\Mock;
 
-use TechDivision\WebServer\Configuration\ServerXmlConfiguration;
+use TechDivision\Server\Configuration\ServerXmlConfiguration;
 
 /**
  * TechDivision\RewriteModule\Mock\MockServerConfig
