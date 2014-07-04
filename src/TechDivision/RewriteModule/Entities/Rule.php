@@ -26,6 +26,7 @@ use TechDivision\Http\HttpResponseInterface;
 use TechDivision\Http\HttpResponseStates;
 use TechDivision\RewriteModule\Dictionaries\RuleFlags;
 use TechDivision\Server\Dictionaries\ServerVars;
+use TechDivision\Server\Interfaces\RequestContextInterface;
 use TechDivision\Server\Interfaces\ServerContextInterface;
 
 /**
@@ -351,16 +352,16 @@ class Rule
     /**
      * Initiates the module
      *
-     * @param \TechDivision\Server\Interfaces\ServerContextInterface $serverContext        The server's context
-     * @param \TechDivision\Http\HttpResponseInterface               $response             The response instance
-     * @param array                                                  $serverBackreferences Server backreferences
+     * @param \TechDivision\Server\Interfaces\RequestContextInterface $requestContext       The server's context
+     * @param \TechDivision\Http\HttpResponseInterface                $response             The response instance
+     * @param array                                                   $serverBackreferences Server backreferences
      *
      * @throws \InvalidArgumentException
      *
      * @return boolean
      */
     public function apply(
-        ServerContextInterface $serverContext,
+        RequestContextInterface $requestContext,
         HttpResponseInterface $response,
         array $serverBackreferences
     ) {
@@ -411,22 +412,22 @@ class Rule
         if (!empty($this->target)) {
 
             // Just make sure that you check for the existence of the query string first, as it might not be set
-            $queryFreeRequestUri = $serverContext->getServerVar(ServerVars::X_REQUEST_URI);
-            if ($serverContext->hasServerVar(ServerVars::QUERY_STRING)) {
+            $queryFreeRequestUri = $requestContext->getServerVar(ServerVars::X_REQUEST_URI);
+            if ($requestContext->hasServerVar(ServerVars::QUERY_STRING)) {
 
                 $queryFreeRequestUri = str_replace(
-                    '?' . $serverContext->getServerVar(ServerVars::QUERY_STRING),
+                    '?' . $requestContext->getServerVar(ServerVars::QUERY_STRING),
                     '',
                     $queryFreeRequestUri
                 );
 
                 // Set the "redirect" query string as a backup as we might change the original
-                $serverContext->setServerVar(
+                $requestContext->setServerVar(
                     'REDIRECT_QUERY_STRING',
-                    $serverContext->getServerVar(ServerVars::QUERY_STRING)
+                    $requestContext->getServerVar(ServerVars::QUERY_STRING)
                 );
             }
-            $serverContext->setServerVar('REDIRECT_URL', $queryFreeRequestUri);
+            $requestContext->setServerVar('REDIRECT_URL', $queryFreeRequestUri);
 
             // Substitute the backreferences in our operation
             $this->target = str_replace($backreferenceHolders, $backreferenceValues, $this->target);
@@ -438,7 +439,7 @@ class Rule
                 $this->type = 'absolute';
 
                 // Set the REQUEST_FILENAME path
-                $serverContext->setServerVar(ServerVars::REQUEST_FILENAME, $this->target);
+                $requestContext->setServerVar(ServerVars::REQUEST_FILENAME, $this->target);
 
             } elseif (filter_var($this->target, FILTER_VALIDATE_URL) !== false &&
                 array_key_exists(RuleFlags::REDIRECT, $this->sortedFlags)
@@ -456,27 +457,27 @@ class Rule
             } else {
                 // Last but not least we might have gotten a relative path (most likely)
                 // Build up the REQUEST_FILENAME from DOCUMENT_ROOT and X_REQUEST_URI (without the query string)
-                $serverContext->setServerVar(
+                $requestContext->setServerVar(
                     ServerVars::SCRIPT_FILENAME,
-                    $serverContext->getServerVar(ServerVars::DOCUMENT_ROOT) . DIRECTORY_SEPARATOR . $this->target
+                    $requestContext->getServerVar(ServerVars::DOCUMENT_ROOT) . DIRECTORY_SEPARATOR . $this->target
                 );
-                $serverContext->setServerVar(ServerVars::SCRIPT_NAME, $this->target);
+                $requestContext->setServerVar(ServerVars::SCRIPT_NAME, $this->target);
 
                 // Setting the X_REQUEST_URI for internal communication
                 // TODO we have to set the QUERY_STRING for the same reason
                 // Requested uri always has to begin with a slash
                 $this->target = '/' . ltrim($this->target, '/');
-                $serverContext->setServerVar(ServerVars::X_REQUEST_URI, $this->target);
+                $requestContext->setServerVar(ServerVars::X_REQUEST_URI, $this->target);
 
                 // Only change the query string if we have one in our target string
                 if (strpos($this->target, '?') !== false) {
 
-                    $serverContext->setServerVar(ServerVars::QUERY_STRING, substr(strstr($this->target, '?'), 1));
+                    $requestContext->setServerVar(ServerVars::QUERY_STRING, substr(strstr($this->target, '?'), 1));
                 }
             }
 
             // Lets tell them that we successfully made a redirect
-            $serverContext->setServerVar('REDIRECT_STATUS', '200');
+            $requestContext->setServerVar('REDIRECT_STATUS', '200');
         }
         // If we got the "LAST"-flag we have to end here, so return false
         if (array_key_exists(RuleFlags::LAST, $this->sortedFlags)) {
