@@ -18,11 +18,14 @@
 
 namespace TechDivision\RewriteModule;
 
+use TechDivision\Connection\ConnectionRequestInterface;
+use TechDivision\Connection\ConnectionResponseInterface;
 use TechDivision\Http\HttpProtocol;
 use TechDivision\Server\Dictionaries\ModuleHooks;
 use TechDivision\Server\Exceptions\ModuleException;
 use TechDivision\Server\Dictionaries\ServerVars;
 use TechDivision\Server\Dictionaries\EnvVars;
+use TechDivision\Server\Interfaces\RequestContextInterface;
 use TechDivision\Server\Interfaces\ServerContextInterface;
 use TechDivision\Http\HttpRequestInterface;
 use TechDivision\Http\HttpResponseInterface;
@@ -94,6 +97,13 @@ class RewriteModule implements ModuleInterface
      * @var \TechDivision\Server\Interfaces\ServerContextInterface $serverContext $serverContext
      */
     protected $serverContext;
+
+    /**
+     * The requests's context instance
+     *
+     * @var \TechDivision\Server\Interfaces\RequestContextInterface $requestContext The request's context instance
+     */
+    protected $requestContext;
 
     /**
      * This array will hold all values which one would suspect as part of the PHP $_SERVER array.
@@ -217,26 +227,39 @@ class RewriteModule implements ModuleInterface
     /**
      * Implement's module logic for given hook
      *
-     * @param \TechDivision\Http\HttpRequestInterface  $request  The request object
-     * @param \TechDivision\Http\HttpResponseInterface $response The response object
-     * @param int                                      $hook     The current hook to process logic for
+     * @param \TechDivision\Connection\ConnectionRequestInterface     $request        A request object
+     * @param \TechDivision\Connection\ConnectionResponseInterface    $response       A response object
+     * @param \TechDivision\Server\Interfaces\RequestContextInterface $requestContext A requests context instance
+     * @param int                                                     $hook           The current hook to process logic for
      *
      * @return bool
      * @throws \TechDivision\Server\Exceptions\ModuleException
      */
-    public function process(HttpRequestInterface $request, HttpResponseInterface $response, $hook)
-    {
+    public function process(
+        ConnectionRequestInterface $request,
+        ConnectionResponseInterface $response,
+        RequestContextInterface $requestContext,
+        $hook
+    ) {
+        // In php an interface is, by definition, a fixed contract. It is immutable.
+        // So we have to declair the right ones afterwards...
+        /** @var $request \TechDivision\Http\HttpRequestInterface */
+        /** @var $request \TechDivision\Http\HttpResponseInterface */
+
         // if false hook is coming do nothing
         if (ModuleHooks::REQUEST_POST !== $hook) {
             return;
         }
 
+        // set member ref for request context
+        $this->requestContext = $requestContext;
+
         // We have to throw a ModuleException on failure, so surround the body with a try...catch block
         try {
 
-            $requestUrl = $this->serverContext->getServerVar(
+            $requestUrl = $requestContext->getServerVar(
                 ServerVars::HTTP_HOST
-            ) . $this->serverContext->getServerVar(ServerVars::X_REQUEST_URI);
+            ) . $requestContext->getServerVar(ServerVars::X_REQUEST_URI);
 
             if (!isset($this->rules[$requestUrl])) {
 
@@ -257,9 +280,9 @@ class RewriteModule implements ModuleInterface
                 // We have to also collect any volatile rules which might be set on request base.
                 // We might not even get anything, so prepare our rules accordingly
                 $volatileRewrites = array();
-                if ($this->serverContext->hasModuleVar(ModuleVars::VOLATILE_REWRITES)) {
+                if ($requestContext->hasModuleVar(ModuleVars::VOLATILE_REWRITES)) {
 
-                    $volatileRewrites = $this->serverContext->getModuleVar(ModuleVars::VOLATILE_REWRITES);
+                    $volatileRewrites = $requestContext->getModuleVar(ModuleVars::VOLATILE_REWRITES);
                 }
 
                 // Build up the complete ruleset, volatile rules up front
@@ -290,7 +313,7 @@ class RewriteModule implements ModuleInterface
                 if ($rule->matches()) {
 
                     // Apply the rule. If apply() returns false this means this was the last rule to process
-                    if ($rule->apply($this->serverContext, $response, $this->serverBackreferences) === false) {
+                    if ($rule->apply($requestContext, $response, $this->serverBackreferences) === false) {
 
                         break;
                     }
@@ -362,15 +385,18 @@ class RewriteModule implements ModuleInterface
      */
     protected function fillContextBackreferences()
     {
+        // get local ref of request context
+        $requestContext = $this->getRequestContext();
+
         // Iterate over all server variables and add them to the backreference array
-        foreach ($this->serverContext->getServerVars() as $varName => $serverVar) {
+        foreach ($requestContext->getServerVars() as $varName => $serverVar) {
 
             // Prefill the value
             $this->serverBackreferences['$' . $varName] = $serverVar;
         }
 
         // Do the same for environment variables
-        foreach ($this->serverContext->getEnvVars() as $varName => $envVar) {
+        foreach ($requestContext->getEnvVars() as $varName => $envVar) {
 
             // Prefill the value
             $this->serverBackreferences['$' . $varName] = $envVar;
@@ -395,5 +421,26 @@ class RewriteModule implements ModuleInterface
     public function getModuleName()
     {
         return self::MODULE_NAME;
+    }
+
+    /**
+     * Return's the request context instance
+     *
+     * @return \TechDivision\Server\Interfaces\RequestContextInterface
+     */
+    public function getRequestContext()
+    {
+        return $this->requestContext;
+    }
+
+    /**
+     * Prepares the module for upcoming request in specific context
+     *
+     * @return bool
+     * @throws \TechDivision\Server\Exceptions\ModuleException
+     */
+    public function prepare()
+    {
+        // nothing to prepare for this module
     }
 }
