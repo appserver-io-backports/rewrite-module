@@ -23,7 +23,8 @@ use TechDivision\Http\HttpProtocol;
 use TechDivision\Http\HttpRequest;
 use TechDivision\Http\HttpResponse;
 use TechDivision\RewriteModule\Mock\MockServerConfig;
-use TechDivision\RewriteModule\Mock\MockServerContext;
+use TechDivision\RewriteModule\Mock\MockRequestContext;
+use TechDivision\Server\Contexts\ServerContext;
 use TechDivision\Server\Dictionaries\ModuleHooks;
 use TechDivision\Server\Dictionaries\ModuleVars;
 use TechDivision\Server\Dictionaries\ServerVars;
@@ -74,6 +75,13 @@ class RewriteModuleTest extends \PHPUnit_Framework_TestCase
     protected $mockServerContext;
 
     /**
+     * The request context we use in this test
+     *
+     * @var \TechDivision\RewriteModule\Mock\MockRequestContext $mockRequestContext
+     */
+    protected $mockRequestContext;
+
+    /**
      * List of files which will not be tested during the test run
      *
      * @var array $excludedDataFiles
@@ -102,7 +110,11 @@ class RewriteModuleTest extends \PHPUnit_Framework_TestCase
         $this->rewriteModule = new RewriteModule();
 
         // We need a mock server context to init our module, otherwise we cannot use it
-        $this->mockServerContext = new MockServerContext(new MockServerConfig());
+        $this->mockServerContext = new ServerContext();
+        $this->mockServerContext->init(new MockServerConfig(null));
+
+        // We need a MockRequestContext to work on
+        $this->mockRequestContext = new MockRequestContext();
 
         // The module has to be inited
         $this->rewriteModule->init($this->mockServerContext);
@@ -124,6 +136,7 @@ class RewriteModuleTest extends \PHPUnit_Framework_TestCase
             }
 
             // Require the different files and collect the data
+            $ruleSets = array();
             require $dataPath . $dataFile;
 
             // Iterate over all rulesets and collect the rules and maps
@@ -181,16 +194,21 @@ class RewriteModuleTest extends \PHPUnit_Framework_TestCase
         $dataSet = $this->rewriteDataSets[$testDataSet];
 
         // We will get the rules into our module by ways of the volatile rewrites
-        $this->mockServerContext->setModuleVar(ModuleVars::VOLATILE_REWRITES, $dataSet['rules']);
+        $this->mockRequestContext->setModuleVar(ModuleVars::VOLATILE_REWRITES, $dataSet['rules']);
 
         // No iterate over the map which is combined with the rules in the dataset
         foreach ($dataSet['map'] as $input => $desiredOutput) {
 
             // We will provide the crucial information by way of server vars
-            $this->mockServerContext->setServerVar(ServerVars::X_REQUEST_URI, $input);
+            $this->mockRequestContext->setServerVar(ServerVars::X_REQUEST_URI, $input);
 
             // Start the processing
-            $this->rewriteModule->process($this->request, $this->response, ModuleHooks::REQUEST_POST);
+            $this->rewriteModule->process(
+                $this->request,
+                $this->response,
+                $this->mockRequestContext,
+                ModuleHooks::REQUEST_POST
+            );
 
             // If we got a redirect we have to test differently
             if (isset($dataSet['redirect'])) {
@@ -219,7 +237,7 @@ class RewriteModuleTest extends \PHPUnit_Framework_TestCase
             } else {
 
                 // Now check if we got the same thing here
-                $this->assertSame($desiredOutput, $this->mockServerContext->getServerVar(ServerVars::X_REQUEST_URI));
+                $this->assertSame($desiredOutput, $this->mockRequestContext->getServerVar(ServerVars::X_REQUEST_URI));
             }
         }
 

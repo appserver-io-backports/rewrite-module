@@ -41,7 +41,7 @@ class MockServerConfig extends ServerXmlConfiguration
     /**
      * Default constructor to eliminate the need for a node.
      */
-    public function __construct()
+    public function __construct($node)
     {
     }
 
