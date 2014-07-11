@@ -6,7 +6,8 @@
     "license": ["OSL-3.0"],
     "require": {
         "php": ">=5.4.0",
-        "techdivision/http": "0.1.*"
+        "techdivision/http": "0.1.*",
+        "techdivision/server": "0.1.*"
     },
     "suggest": {
         "techdivision/appserver-documentation": "Complete documentation of the appserver.io project"
