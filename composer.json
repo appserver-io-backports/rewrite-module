@@ -4,18 +4,17 @@
     "keywords": ["mod_rewrite", "URL rewriting", "webserver", "module"],
     "homepage": "https://github.com/techdivision/TechDivision_RewriteModule",
     "license": ["OSL-3.0"],
-    "minimum-stability": "dev",
     "require": {
         "php": ">=5.4.0",
-        "techdivision/http": "dev-master",
-        "techdivision/webserver": "dev-master"
+        "techdivision/http": "0.1.*",
+        "techdivision/server": "0.1.*"
     },
     "suggest": {
         "techdivision/appserver-documentation": "Complete documentation of the appserver.io project"
     },
     "autoload": {
         "psr-0": {
-            "TechDivision": ["src/", "tests/"]
+            "TechDivision\\RewriteModule": ["src/", "tests/"]
         }
     },
     "config": {
