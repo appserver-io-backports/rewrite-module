@@ -21,10 +21,10 @@
 namespace TechDivision\RewriteModule\Mock;
 
 use TechDivision\Server\Interfaces\ServerConfigurationInterface;
-use TechDivision\Server\ServerContext;
+use TechDivision\Server\Contexts\RequestContext;
 
 /**
- * TechDivision\RewriteModule\Mock\MockServerContext
+ * TechDivision\RewriteModule\Mock\MockRequestContext
  *
  * Mock class to be used to init the module
  *
@@ -37,20 +37,17 @@ use TechDivision\Server\ServerContext;
  *             Open Software License (OSL 3.0)
  * @link       http://www.techdivision.com/
  */
-class MockServerContext extends ServerContext
+class MockRequestContext extends RequestContext
 {
 
     /**
      * Default constructor in which we set reasonable default values for our server vars
      * in order to avoid further mocking of configurations.
      */
-    public function __construct(ServerConfigurationInterface $serverConfig)
+    public function __construct()
     {
-        // Set the server config
-        $this->serverConfig = $serverConfig;
-
-        // We need the envVars array, as we are not initing it correctly
-        $this->envVars = array();
+        // Set up parent BEFORE filling in some values
+        parent::__construct();
 
         // Presetting the server vars with some default values
         $this->serverVars = array (
