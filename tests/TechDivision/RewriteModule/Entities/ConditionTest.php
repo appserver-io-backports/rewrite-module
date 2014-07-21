@@ -241,9 +241,12 @@ class ConditionTest extends \PHPUnit_Framework_TestCase
 
         // Now with type regex and ONE backreference in it
         $condition = new Condition('testBACKREFtest', '(BACKREF)');
-        $this->assertEquals(1, count($condition->getBackreferences()));
-        $this->assertEquals('BACKREF', array_pop($condition->getBackreferences()));
-        $this->assertEquals('$1', array_pop(array_keys($condition->getBackreferences())));
+        $backreferences = $condition->getBackreferences();
+        $this->assertEquals(1, count($backreferences));
+        $element = array_pop($backreferences);
+        $this->assertEquals('BACKREF', $element);
+        $arrayKeys = array_keys($condition->getBackreferences());
+        $this->assertEquals('$1', array_pop($arrayKeys));
 
         // Now try with two of them
         $condition = new Condition('testBACKREFtest', '(BACKREF).+(t)');
