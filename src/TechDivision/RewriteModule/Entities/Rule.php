@@ -13,21 +13,18 @@
  * @subpackage Entities
  * @author     Bernhard Wick <b.wick@techdivision.com>
  * @copyright  2014 TechDivision GmbH - <info@techdivision.com>
- * @license    http://opensource.org/licenses/osl-3.0.php
- *             Open Software License (OSL 3.0)
+ * @license    http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link       http://www.techdivision.com/
  */
 
 namespace TechDivision\RewriteModule\Entities;
 
 use TechDivision\Http\HttpProtocol;
-use TechDivision\Http\HttpRequestInterface;
 use TechDivision\Http\HttpResponseInterface;
 use TechDivision\Http\HttpResponseStates;
 use TechDivision\RewriteModule\Dictionaries\RuleFlags;
 use TechDivision\Server\Dictionaries\ServerVars;
 use TechDivision\Server\Interfaces\RequestContextInterface;
-use TechDivision\Server\Interfaces\ServerContextInterface;
 
 /**
  * TechDivision\RewriteModule\Entities\Rule
@@ -40,8 +37,7 @@ use TechDivision\Server\Interfaces\ServerContextInterface;
  * @subpackage Entities
  * @author     Bernhard Wick <b.wick@techdivision.com>
  * @copyright  2014 TechDivision GmbH - <info@techdivision.com>
- * @license    http://opensource.org/licenses/osl-3.0.php
- *             Open Software License (OSL 3.0)
+ * @license    http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link       http://www.techdivision.com/
  */
 class Rule
@@ -112,23 +108,23 @@ class Rule
     /**
      * This constant by which conditions are separated and marked as or-combined
      *
-     * @const string CONDITION_OR_DELIMETER
+     * @const string CONDITION_OR_DELIMITER
      */
-    const CONDITION_OR_DELIMETER = '{OR}';
+    const CONDITION_OR_DELIMITER = '{OR}';
 
     /**
      * This constant by which conditions are separated and marked as and-combined (the default)
      *
-     * @const string CONDITION_AND_DELIMETER
+     * @const string CONDITION_AND_DELIMITER
      */
-    const CONDITION_AND_DELIMETER = '{AND}';
+    const CONDITION_AND_DELIMITER = '{AND}';
 
     /**
      * This constant is used to separate flags from each other
      *
-     * @const string FLAG_DELIMETER
+     * @const string FLAG_DELIMITER
      */
-    const FLAG_DELIMETER = ',';
+    const FLAG_DELIMITER = ',';
 
     /**
      * This constant is used to separate flags from their potential parameters
@@ -140,14 +136,15 @@ class Rule
     /**
      * Default constructor
      *
-     * @param string       $conditionString The condition string e.g. "^_Resources/.*" or "-f{OR}-d{OR}-d@$REQUEST_FILENAME"
+     * @param string       $conditionString Condition string e.g. "^_Resources/.*" or "-f{OR}-d{OR}-d@$REQUEST_FILENAME"
      * @param string|array $target          The target to rewrite to, might be null if we should do nothing
      * @param string       $flagString      A flag string which might be added to to the rule e.g. "L" or "C,R"
      */
     public function __construct($conditionString, $target, $flagString)
     {
         // Set the raw string properties and append our default operand to the condition string
-        $this->conditionString = $conditionString = $conditionString . $this->getDefaultOperand();
+        $this->conditionString = $conditionString;
+        $conditionString .= $this->getDefaultOperand();
         $this->target = $target;
         $this->flagString = $flagString;
 
@@ -174,21 +171,21 @@ class Rule
             // Trim whatever we got here as the string might be a bit dirty
             $actionString = trim(
                 $conditionActions[$i],
-                self::CONDITION_OR_DELIMETER . '|' . self::CONDITION_AND_DELIMETER
+                self::CONDITION_OR_DELIMITER . '|' . self::CONDITION_AND_DELIMITER
             );
 
             // Collect all and-combined pieces of the conditionstring
-            $andActionStringPieces = explode(self::CONDITION_AND_DELIMETER, $actionString);
+            $andActionStringPieces = explode(self::CONDITION_AND_DELIMITER, $actionString);
 
             // Iterate through them and build up conditions or or-combined condition groups
             foreach ($andActionStringPieces as $andActionStringPiece) {
 
                 // Everything is and-combined (plain array) unless combined otherwise (with a "{OR}" symbol)
                 // If we find an or-combination we will make a deeper array within our sorted condition array
-                if (strpos($andActionStringPiece, self::CONDITION_OR_DELIMETER) !== false) {
+                if (strpos($andActionStringPiece, self::CONDITION_OR_DELIMITER) !== false) {
 
                     // Collect all or-combined conditions into a separate array
-                    $actionStringPieces = explode(self::CONDITION_OR_DELIMETER, $andActionStringPiece);
+                    $actionStringPieces = explode(self::CONDITION_OR_DELIMITER, $andActionStringPiece);
 
                     // Iterate over the pieces we found and create a condition for each of them
                     $entry = array();
@@ -219,7 +216,7 @@ class Rule
     protected function sortFlags($flagString)
     {
         $flags = array();
-        foreach (explode(self::FLAG_DELIMETER, $flagString) as $flag) {
+        foreach (explode(self::FLAG_DELIMITER, $flagString) as $flag) {
 
             $flagPieces = explode(self::FLAG_PARAMETER_ASSIGNER, $flag);
 
@@ -377,17 +374,12 @@ class Rule
         // The following checks will be treated as an additional condition
         if (array_key_exists(RuleFlags::MAP, $this->sortedFlags) && !empty($this->sortedFlags[RuleFlags::MAP])) {
 
-            // We got a map! Now check if we know how to resolve it
-            if (!isset($this->matchingBackreferences[$this->sortedFlags[RuleFlags::MAP]])) {
-
-                throw new \InvalidArgumentException(
-                    'Could not find a matching (back)reference for flag key ' .
-                    $this->sortedFlags[RuleFlags::MAP]
-                );
-            }
-
             // Get our map key for better readability
-            $mapKey = $this->matchingBackreferences[$this->sortedFlags[RuleFlags::MAP]];
+            $mapKey = str_replace(
+                array_keys($this->matchingBackreferences),
+                $this->matchingBackreferences,
+                $this->sortedFlags[RuleFlags::MAP]
+            );
 
             // Still here? That sounds good. Get the needed target string now
             if (isset($this->target[$mapKey])) {
@@ -464,7 +456,6 @@ class Rule
                 $requestContext->setServerVar(ServerVars::SCRIPT_NAME, $this->target);
 
                 // Setting the X_REQUEST_URI for internal communication
-                // TODO we have to set the QUERY_STRING for the same reason
                 // Requested uri always has to begin with a slash
                 $this->target = '/' . ltrim($this->target, '/');
                 $requestContext->setServerVar(ServerVars::X_REQUEST_URI, $this->target);

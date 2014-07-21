@@ -8,51 +8,61 @@
  *
  * PHP version 5
  *
- * @category   Appserver
+ * @category   WebServer
  * @package    TechDivision_RewriteModule
- * @subpackage Dictionaries
+ * @subpackage Mock
  * @author     Bernhard Wick <b.wick@techdivision.com>
  * @copyright  2014 TechDivision GmbH - <info@techdivision.com>
  * @license    http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link       http://www.techdivision.com/
  */
 
-namespace TechDivision\RewriteModule\Dictionaries;
+namespace TechDivision\RewriteModule\Mock;
+
+use TechDivision\RewriteModule\Entities\Condition;
 
 /**
- * TechDivision\RewriteModule\Dictionaries\RuleFlags
+ * TechDivision\RewriteModule\Mock\MockCondition
  *
- * This file is a dictionary for rule flags.
- * Defines constant for flags we might use within the rule's flag field
+ * Mocks the Condition class to expose additional functionality
  *
- * @category   Appserver
+ * @category   WebServer
  * @package    TechDivision_RewriteModule
- * @subpackage Dictionaries
+ * @subpackage Mock
  * @author     Bernhard Wick <b.wick@techdivision.com>
  * @copyright  2014 TechDivision GmbH - <info@techdivision.com>
  * @license    http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link       http://www.techdivision.com/
  */
-class RuleFlags
+class MockCondition extends Condition
 {
     /**
-     * Make a redirect instead of a mere rewrite
+     * Getter for the $additionalOperand member
      *
-     * @var string
+     * @return string
      */
-    const REDIRECT = 'R';
+    public function getAdditionalOperand()
+    {
+        return $this->additionalOperand;
+    }
 
     /**
-     * Take the target from a specified map
+     * Getter for the $action member
      *
-     * @var string
+     * @return string
      */
-    const MAP = 'M';
+    public function getAction()
+    {
+        return $this->action;
+    }
 
     /**
-     * Do not process following rewrite rules if this one matches
+     * Getter for the $isNegated member
      *
-     * @var string
+     * @return boolean
      */
-    const LAST = 'L';
+    public function getIsNegated()
+    {
+        return $this->isNegated;
+    }
 }

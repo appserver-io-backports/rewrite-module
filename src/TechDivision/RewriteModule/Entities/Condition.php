@@ -13,8 +13,7 @@
  * @subpackage Entities
  * @author     Bernhard Wick <b.wick@techdivision.com>
  * @copyright  2014 TechDivision GmbH - <info@techdivision.com>
- * @license    http://opensource.org/licenses/osl-3.0.php
- *             Open Software License (OSL 3.0)
+ * @license    http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link       http://www.techdivision.com/
  */
 
@@ -33,8 +32,7 @@ use TechDivision\Server\Dictionaries\ServerVars;
  * @subpackage Entities
  * @author     Bernhard Wick <b.wick@techdivision.com>
  * @copyright  2014 TechDivision GmbH - <info@techdivision.com>
- * @license    http://opensource.org/licenses/osl-3.0.php
- *             Open Software License (OSL 3.0)
+ * @license    http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link       http://www.techdivision.com/
  */
 class Condition
@@ -111,8 +109,6 @@ class Condition
      * @param string $modifier Modifier which should be used to integrate things like apache flags and others
      *
      * @throws \InvalidArgumentException
-     *
-     * TODO missing Apache flags -F and -U
      */
     public function __construct($operand, $action, $modifier = '')
     {
@@ -154,8 +150,7 @@ class Condition
             $this->action = ltrim($this->action, '!');
         }
 
-        // Are we able to find any of the additions htaccess syntax offers? Per default it's regex.
-        $isRegex = true;
+        // Are we able to find any of the additions htaccess syntax offers? Per default it's regex
         foreach ($this->htaccessAdditions as $addition) {
 
             // The string has to start with an addition (any negating ! was cut of before)
@@ -166,14 +161,16 @@ class Condition
                 $tmp = substr($this->action, 0, 1);
                 if ($tmp === '<' || $tmp === '>' || $tmp === '=') {
 
-                    // We have to extract the needed parts of our operation and refill it into our additional operand string
+                    // We have to extract the needed parts of our operation and refill it into
+                    // our additional operand string
                     $this->additionalOperand = substr($this->action, 1);
                     $this->action = substr($this->action, 0, 1);
 
-                } else {
+                } elseif (!is_readable($this->operand)) {
 
                     // Set the placeholder for the document root, it will be resolved anyway
-                    $this->additionalOperand = '$' . ServerVars::DOCUMENT_ROOT;
+                    // If we got ourselves a complete path, we do not need the document root
+                    $this->additionalOperand = '$' . ServerVars::DOCUMENT_ROOT . DIRECTORY_SEPARATOR;
                 }
 
                 // If we reach this point we are of the check type
@@ -260,28 +257,28 @@ class Condition
         } elseif ($this->action === ConditionActions::IS_DIR) {
             // Is it an existing directory?
 
-            $result = is_dir($this->additionalOperand . DIRECTORY_SEPARATOR . $this->operand);
+            $result = is_dir($this->additionalOperand . $this->operand);
 
         } elseif ($this->action === ConditionActions::IS_EXECUTABLE) {
             // Is the file an executable?
 
-            $result = is_dir($this->additionalOperand . DIRECTORY_SEPARATOR . $this->operand);
+            $result = is_executable($this->additionalOperand . $this->operand);
 
         } elseif ($this->action === ConditionActions::IS_FILE) {
             // Is it a regular file?
 
-            $result = is_file($this->additionalOperand . DIRECTORY_SEPARATOR . $this->operand);
+            $result = is_file($this->additionalOperand . $this->operand);
 
         } elseif ($this->action === ConditionActions::IS_LINK) {
             // Is it a symlink?
 
-            $result = is_link($this->additionalOperand . DIRECTORY_SEPARATOR . $this->operand);
+            $result = is_link($this->additionalOperand .$this->operand);
 
         } elseif ($this->action === ConditionActions::IS_USED_FILE) {
             // Is it a real file which has a size greater 0?
 
-            $result = is_file($this->additionalOperand . DIRECTORY_SEPARATOR . $this->operand) &&
-                filesize($this->additionalOperand . DIRECTORY_SEPARATOR . $this->operand) > 0;
+            $result = is_file($this->additionalOperand . $this->operand) &&
+                filesize($this->additionalOperand . $this->operand) > 0;
 
         } elseif ($this->action === ConditionActions::STR_EQUAL) {
             // Or the compared strings equal
@@ -298,16 +295,6 @@ class Condition
 
             $result = strcmp($this->operand, $this->additionalOperand) < 0;
 
-        } else {
-            // We should not be here ...
-
-            throw new \InvalidArgumentException('Could not recognize condition check action ' . $this->action);
-        }
-
-        // If we reached this point we should by any means have a boolean result
-        if (!is_bool($result)) {
-
-            return false;
         }
 
         // If the check got negated we will just negate what we got from our preceding checks
