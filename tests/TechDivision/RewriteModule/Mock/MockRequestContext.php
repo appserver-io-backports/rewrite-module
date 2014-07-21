@@ -13,14 +13,12 @@
  * @subpackage Mock
  * @author     Bernhard Wick <b.wick@techdivision.com>
  * @copyright  2014 TechDivision GmbH - <info@techdivision.com>
- * @license    http://opensource.org/licenses/osl-3.0.php
- *             Open Software License (OSL 3.0)
+ * @license    http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link       http://www.techdivision.com/
  */
 
 namespace TechDivision\RewriteModule\Mock;
 
-use TechDivision\Server\Interfaces\ServerConfigurationInterface;
 use TechDivision\Server\Contexts\RequestContext;
 
 /**
@@ -33,8 +31,7 @@ use TechDivision\Server\Contexts\RequestContext;
  * @subpackage Mock
  * @author     Bernhard Wick <b.wick@techdivision.com>
  * @copyright  2014 TechDivision GmbH - <info@techdivision.com>
- * @license    http://opensource.org/licenses/osl-3.0.php
- *             Open Software License (OSL 3.0)
+ * @license    http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link       http://www.techdivision.com/
  */
 class MockRequestContext extends RequestContext
@@ -51,8 +48,10 @@ class MockRequestContext extends RequestContext
 
         // Presetting the server vars with some default values
         $this->serverVars = array (
-            'DOCUMENT_ROOT' => realpath(__DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR .
-                '_files'),
+            'DOCUMENT_ROOT' => realpath(
+                __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR .
+                '_files'
+            ),
             'SERVER_ADMIN' => 'admin@appserver.io',
             'SERVER_NAME' => 'unittest.local',
             'SERVER_ADDR' => '0.0.0.0',

@@ -8,51 +8,42 @@
  *
  * PHP version 5
  *
- * @category   Appserver
+ * @category   WebServer
  * @package    TechDivision_RewriteModule
- * @subpackage Dictionaries
+ * @subpackage Mock
  * @author     Bernhard Wick <b.wick@techdivision.com>
  * @copyright  2014 TechDivision GmbH - <info@techdivision.com>
  * @license    http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link       http://www.techdivision.com/
  */
 
-namespace TechDivision\RewriteModule\Dictionaries;
+namespace TechDivision\RewriteModule\Mock;
+
+use TechDivision\Server\Contexts\ServerContext;
 
 /**
- * TechDivision\RewriteModule\Dictionaries\RuleFlags
+ * TechDivision\RewriteModule\Mock\MockServerContext
  *
- * This file is a dictionary for rule flags.
- * Defines constant for flags we might use within the rule's flag field
+ * Mocks the ServerContext class to test exception catching
  *
- * @category   Appserver
+ * @category   WebServer
  * @package    TechDivision_RewriteModule
- * @subpackage Dictionaries
+ * @subpackage Mock
  * @author     Bernhard Wick <b.wick@techdivision.com>
  * @copyright  2014 TechDivision GmbH - <info@techdivision.com>
  * @license    http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link       http://www.techdivision.com/
  */
-class RuleFlags
+class MockServerContext extends ServerContext
 {
     /**
-     * Make a redirect instead of a mere rewrite
+     * Overridden method to test exception handling
      *
-     * @var string
+     * @return void
+     * @throws \Exception
      */
-    const REDIRECT = 'R';
-
-    /**
-     * Take the target from a specified map
-     *
-     * @var string
-     */
-    const MAP = 'M';
-
-    /**
-     * Do not process following rewrite rules if this one matches
-     *
-     * @var string
-     */
-    const LAST = 'L';
+    public function getServerConfig()
+    {
+        throw new \Exception();
+    }
 }

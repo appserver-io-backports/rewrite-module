@@ -12,22 +12,24 @@
  * @package   TechDivision_RewriteModule
  * @author    Bernhard Wick <b.wick@techdivision.com>
  * @copyright 2014 TechDivision GmbH - <info@techdivision.com>
- * @license   http://opensource.org/licenses/osl-3.0.php
- *            Open Software License (OSL 3.0)
+ * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      http://www.techdivision.com/
  */
 
-namespace TechDivision\RewriteModule;
+namespace TechDivision\RewriteModule\Tests;
 
-use TechDivision\Http\HttpProtocol;
 use TechDivision\Http\HttpRequest;
 use TechDivision\Http\HttpResponse;
+use TechDivision\RewriteModule\Mock\MockFaultyRequestContext;
+use TechDivision\RewriteModule\Mock\MockRewriteModule;
 use TechDivision\RewriteModule\Mock\MockServerConfig;
 use TechDivision\RewriteModule\Mock\MockRequestContext;
+use TechDivision\RewriteModule\Mock\MockServerContext;
+use TechDivision\RewriteModule\RewriteModule;
 use TechDivision\Server\Contexts\ServerContext;
+use TechDivision\Server\Dictionaries\EnvVars;
 use TechDivision\Server\Dictionaries\ModuleHooks;
-use TechDivision\Server\Dictionaries\ModuleVars;
-use TechDivision\Server\Dictionaries\ServerVars;
+use TechDivision\RewriteModule\Mock\MockHttpRequest;
 
 /**
  * TechDivision\RewriteModule\RewriteModuleTest
@@ -38,530 +40,164 @@ use TechDivision\Server\Dictionaries\ServerVars;
  * @package   TechDivision_RewriteModule
  * @author    Bernhard Wick <b.wick@techdivision.com>
  * @copyright 2014 TechDivision GmbH - <info@techdivision.com>
- * @license   http://opensource.org/licenses/osl-3.0.php
- *            Open Software License (OSL 3.0)
+ * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      http://www.techdivision.com/
  */
 class RewriteModuleTest extends \PHPUnit_Framework_TestCase
 {
-
     /**
-     * The rewrite module instance to test.
-     *
-     * @var \TechDivision\RewriteModule\RewriteModule
-     */
-    protected $rewriteModule;
-
-    /**
-     * Nested array of datasets we will tests one after another
-     *
-     * @var array $rewriteDataSets
-     */
-    protected $rewriteDataSets = array();
-
-    /**
-     * Nested array of datasets we will tests one after another.
-     * Theses datasets contain redirects which have to be tested differently
-     *
-     * @var array $redirectDataSets
-     */
-    protected $redirectDataSets = array();
-
-    /**
-     * The mock server context we use in this test
-     *
-     * @var \TechDivision\RewriteModule\Mock\MockServerContext $mockServerContext
-     */
-    protected $mockServerContext;
-
-    /**
-     * The request context we use in this test
-     *
-     * @var \TechDivision\RewriteModule\Mock\MockRequestContext $mockRequestContext
-     */
-    protected $mockRequestContext;
-
-    /**
-     * List of files which will not be tested during the test run
-     *
-     * @var array $excludedDataFiles
-     */
-    protected $excludedDataFiles = array('.', '..', 'html');
-
-    /**
-     * @var \TechDivision\Http\HttpRequest $request The request we need for processing
-     */
-    protected $request;
-
-    /**
-     * @var \TechDivision\Http\HttpResponse $response The response we need for processing
-     */
-    protected $response;
-
-    /**
-     * Initializes the rewrite module to test.
-     * Will also build up needed mock objects and provide data for the actual rewrite tests.
+     * Tests a certain path through the process() method
      *
      * @return void
      */
-    public function setUp()
+    public function testInitWithException()
     {
-        // Get an instance of the module we can test with
-        $this->rewriteModule = new RewriteModule();
+        // We should get a \TechDivision\Server\Exceptions\ModuleException
+        $this->setExpectedException('\TechDivision\Server\Exceptions\ModuleException');
 
-        // We need a mock server context to init our module, otherwise we cannot use it
-        $this->mockServerContext = new ServerContext();
-        $this->mockServerContext->init(new MockServerConfig(null));
+        // Get the objects we need
+        $rewriteModule = new RewriteModule();
+        $mockServerContext = new MockServerContext();
 
-        // We need a MockRequestContext to work on
-        $this->mockRequestContext = new MockRequestContext();
-
-        // The module has to be inited
-        $this->rewriteModule->init($this->mockServerContext);
-
-        // We will collect all data files
-        $dataPath = __DIR__ . DIRECTORY_SEPARATOR . '_files' . DIRECTORY_SEPARATOR;
-        $dataFiles = scandir($dataPath);
-
-        // Iterate over all data files and collect the sets of test data
-        foreach ($dataFiles as $dataFile) {
-
-            // Skip the files we do not want
-            foreach ($this->excludedDataFiles as $excludedDataFile) {
-
-                if (strpos($dataFile, $excludedDataFile) === 0) {
-
-                    continue 2;
-                }
-            }
-
-            // Require the different files and collect the data
-            $ruleSets = array();
-            require $dataPath . $dataFile;
-
-            // Iterate over all rulesets and collect the rules and maps
-            foreach ($ruleSets as $setName => $ruleSet) {
-
-                // Per convention we got the variables $rules, and $map within a file
-                $this->rewriteDataSets[$setName] = array(
-                    'redirect' => @$ruleSet['redirect'],
-                    'rules' => $ruleSet['rules'],
-                    'map' => $ruleSet['map']
-                );
-            }
-        }
-
-        // Create a request and response object we can use for our processing
-        $this->request = new HttpRequest();
-        $this->response = new HttpResponse();
-        $this->response->init();
+        // Do the thing
+        $rewriteModule->init($mockServerContext);
     }
 
     /**
-     * Test if the constructor created an instance of the rewrite module.
+     * Tests the getDependencies() method
      *
      * @return void
      */
-    public function testInstanceOf()
+    public function testGetDependencies()
     {
-        $this->assertInstanceOf('\TechDivision\RewriteModule\RewriteModule', $this->rewriteModule);
+        $rewriteModule = new RewriteModule();
+        $this->assertEmpty($rewriteModule->getDependencies());
     }
 
     /**
-     * Basic test of the module name
+     * Tests the getModuleName() method
      *
      * @return void
      */
-    public function testModuleName()
+    public function testGetModuleName()
     {
-        $module = $this->rewriteModule;
-        $this->assertSame('rewrite', $module::MODULE_NAME);
+        $rewriteModule = new RewriteModule();
+        $this->assertEquals('rewrite', $rewriteModule->getModuleName());
     }
 
-    /*
-     * Iterate over all sets of data and test the rewriting
+    /**
+     * Tests the getRequestContext() method
      *
-     * @param string $testDataSet The dataset to test against
+     * @return void
+     *
+     * @depends testProcess
+     */
+    public function testGetRequestContext()
+    {
+        // Get objects we need
+        $rewriteModule = new MockRewriteModule();
+        $mockRequestContext = new MockRequestContext();
+
+        // Do the thing
+        $rewriteModule->setRequestContext($mockRequestContext);
+        $this->assertSame($mockRequestContext, $rewriteModule->getRequestContext());
+    }
+
+    /**
+     * Tests the prepare() method
      *
      * @return void
      */
-    public function assertionEngine($testDataSet)
+    public function testPrepare()
     {
-        // Do we know this dataset?
-        $this->assertArrayHasKey($testDataSet, $this->rewriteDataSets);
-
-        // Get our dataset
-        $dataSet = $this->rewriteDataSets[$testDataSet];
-
-        // We will get the rules into our module by ways of the volatile rewrites
-        $this->mockRequestContext->setModuleVar(ModuleVars::VOLATILE_REWRITES, $dataSet['rules']);
-
-        // No iterate over the map which is combined with the rules in the dataset
-        foreach ($dataSet['map'] as $input => $desiredOutput) {
-
-            // We will provide the crucial information by way of server vars
-            $this->mockRequestContext->setServerVar(ServerVars::X_REQUEST_URI, $input);
-
-            // Start the processing
-            $this->rewriteModule->process(
-                $this->request,
-                $this->response,
-                $this->mockRequestContext,
-                ModuleHooks::REQUEST_POST
-            );
-
-            // If we got a redirect we have to test differently
-            if (isset($dataSet['redirect'])) {
-
-                try {
-                    // Has the header location been set at all?
-                    // If we did not match any redirect condition and will set it to the input
-                    if (!$this->response->hasHeader(HttpProtocol::HEADER_LOCATION)) {
-
-                        $this->response->addHeader(HttpProtocol::HEADER_LOCATION, $input);
-                    }
-
-                    // Asserting that the header location was set correctly
-                    $this->assertSame($desiredOutput, $this->response->getHeader(HttpProtocol::HEADER_LOCATION));
-
-                } catch (\Exception $e) {
-
-                    // Do not forget to reset the response object we are using!!
-                    $this->response = new HttpResponse();
-                    $this->response->init();
-
-                    // Re-throw the exception
-                    throw $e;
-                }
-
-            } else {
-
-                // Now check if we got the same thing here
-                $this->assertSame($desiredOutput, $this->mockRequestContext->getServerVar(ServerVars::X_REQUEST_URI));
-            }
-        }
-
-        // Still here? Then we are successful
-        return true;
+        $rewriteModule = new RewriteModule();
+        $rewriteModule->prepare();
     }
 
     /**
-     * Test wrapper for the appserver dataset
+     * Tests a certain path through the process() method
      *
-     * @return null
-     * @throws \Exception
+     * @return void
      */
-    public function testAppserver()
+    public function testProcessWithWrongHook()
     {
-        try {
+        // Get the objects we need
+        $rewriteModule = new RewriteModule();
+        $request = new HttpRequest();
+        $response = new HttpResponse();
+        $mockRequestContext = new MockRequestContext();
 
-            // Now check if we got the same thing here
-            $this->assertionEngine('appserver');
-
-        } catch (\Exception $e) {
-
-            // Re-throw the exception
-            throw $e;
-        }
+        // Do the thing
+        $this->assertSame(
+            null,
+            $rewriteModule->process($request, $response, $mockRequestContext, ModuleHooks::REQUEST_PRE)
+        );
     }
 
     /**
-     * Test wrapper for the realFile dataset
+     * Tests a certain path through the process() method
      *
-     * @return null
-     * @throws \Exception
+     * @return void
      */
-    public function testRealFile()
+    public function testProcessWithException()
     {
-        try {
+        // We should get a \TechDivision\Server\Exceptions\ModuleException
+        $this->setExpectedException('\TechDivision\Server\Exceptions\ModuleException');
 
-            // Now check if we got the same thing here
-            $this->assertionEngine('realFile');
+        // Get the objects we need
+        $rewriteModule = new RewriteModule();
+        $request = new HttpRequest();
+        $response = new HttpResponse();
+        $mockFaultyRequestContext = new MockFaultyRequestContext();
 
-        } catch (\Exception $e) {
-
-            // Re-throw the exception
-            throw $e;
-        }
+        // Do the thing
+        $rewriteModule->process($request, $response, $mockFaultyRequestContext, ModuleHooks::REQUEST_POST);
     }
 
     /**
-     * Test wrapper for the realDir dataset
+     * Tests the fillContextBackreferences() method
      *
-     * @return null
-     * @throws \Exception
+     * @return void
      */
-    public function testRealDir()
+    public function testFillContextBackreferences()
     {
-        try {
+        // Get the objects we need
+        $rewriteModule = new MockRewriteModule();
+        $request = new HttpRequest();
+        $response = new HttpResponse();
+        $mockRequestContext = new MockRequestContext();
 
-            // Now check if we got the same thing here
-            $this->assertionEngine('realDir');
-
-        } catch (\Exception $e) {
-
-            // Re-throw the exception
-            throw $e;
-        }
+        // Do the thing
+        $mockRequestContext->setEnvVar(EnvVars::HTTPS, 'test');
+        $rewriteModule->setRequestContext($mockRequestContext);
+        $rewriteModule->fillContextBackreferences();
+        $this->assertEquals('test', $rewriteModule->getServerBackreferences()['$' . EnvVars::HTTPS]);
     }
 
     /**
-     * Test wrapper for the symlink dataset
+     * Tests the fillHeaderBackreferences() method
      *
-     * @return null
-     * @throws \Exception
-     */
-    public function testSymlink()
-    {
-        try {
-
-            // Now check if we got the same thing here
-            $this->assertionEngine('symlink');
-
-        } catch (\Exception $e) {
-
-            // Re-throw the exception
-            throw $e;
-        }
-    }
-
-    /**
-     * Test wrapper for the LFlag dataset
+     * @return void
      *
-     * @return null
-     * @throws \Exception
+     * @depends testProcessWithException
+     * @depends testProcessWithWrongHook
      */
-    public function testLFlag()
+    public function testFillHeaderBackreferences()
     {
-        try {
+        // Get the objects we need
+        $rewriteModule = new MockRewriteModule();
+        $request = new HttpRequest();
+        $serverContext = new ServerContext();
 
-            // Now check if we got the same thing here
-            $this->assertionEngine('LFlag');
+        // Do the thing
+        $serverContext->init(new MockServerConfig(null));
+        $rewriteModule->init($serverContext);
+        $request->addHeader('Host', 'test-host.com');
+        $rewriteModule->fillHeaderBackreferences($request);
 
-        } catch (\Exception $e) {
-
-            // Re-throw the exception
-            throw $e;
-        }
-    }
-
-    /**
-     * Test wrapper for the RFlag dataset
-     *
-     * @return null
-     * @throws \Exception
-     */
-    public function testRFlag()
-    {
-        try {
-
-            // Now check if we got the same thing here
-            $this->assertionEngine('RFlag');
-
-        } catch (\Exception $e) {
-
-            // Re-throw the exception
-            throw $e;
-        }
-    }
-
-    /**
-     * Test wrapper for the mixedFlags dataset
-     *
-     * @return null
-     * @throws \Exception
-     */
-    public function testMixedFlags()
-    {
-        try {
-
-            // Now check if we got the same thing here
-            $this->assertionEngine('mixedFlags');
-
-        } catch (\Exception $e) {
-
-            // Re-throw the exception
-            throw $e;
-        }
-    }
-
-    /**
-     * Test wrapper for the magento dataset
-     *
-     * @return null
-     * @throws \Exception
-     */
-    public function testMagento()
-    {
-        try {
-
-            // Now check if we got the same thing here
-            $this->assertionEngine('magento');
-
-        } catch (\Exception $e) {
-
-            // Re-throw the exception
-            throw $e;
-        }
-    }
-
-    /**
-     * Test wrapper for the singleBackreference dataset
-     *
-     * @return null
-     * @throws \Exception
-     */
-    public function testSingleBackreference()
-    {
-        try {
-
-            // Now check if we got the same thing here
-            $this->assertionEngine('singleBackreference');
-
-        } catch (\Exception $e) {
-
-            // Re-throw the exception
-            throw $e;
-        }
-    }
-
-    /**
-     * Test wrapper for the doubleBackreference dataset
-     *
-     * @return null
-     * @throws \Exception
-     */
-    public function testDoubleBackreference()
-    {
-        try {
-
-            // Now check if we got the same thing here
-            $this->assertionEngine('doubleBackreference');
-
-        } catch (\Exception $e) {
-
-            // Re-throw the exception
-            throw $e;
-        }
-    }
-
-    /**
-     * Test wrapper for the mixedBackreference dataset
-     *
-     * @return null
-     * @throws \Exception
-     */
-    public function testMixedBackreference()
-    {
-        try {
-
-            // Now check if we got the same thing here
-            $this->assertionEngine('mixedBackreference');
-
-        } catch (\Exception $e) {
-
-            // Re-throw the exception
-            throw $e;
-        }
-    }
-
-    /**
-     * Test wrapper for the blockingBackreferences dataset
-     *
-     * @return null
-     * @throws \Exception
-     */
-    public function testBlockingBackreferences()
-    {
-        try {
-
-            // Now check if we got the same thing here
-            $this->assertionEngine('blockingBackreferences');
-
-        } catch (\Exception $e) {
-
-            // Re-throw the exception
-            throw $e;
-        }
-    }
-
-    /**
-     * Test wrapper for the serverVars dataset
-     *
-     * @return null
-     * @throws \Exception
-     */
-    public function testServerVars()
-    {
-        try {
-
-            // Now check if we got the same thing here
-            $this->assertionEngine('serverVars');
-
-        } catch (\Exception $e) {
-
-            // Re-throw the exception
-            throw $e;
-        }
-    }
-
-    /**
-     * Test wrapper for the varCondition dataset
-     *
-     * @return null
-     * @throws \Exception
-     */
-    public function testVarCondition()
-    {
-        try {
-
-            // Now check if we got the same thing here
-            $this->assertionEngine('varCondition');
-
-        } catch (\Exception $e) {
-
-            // Re-throw the exception
-            throw $e;
-        }
-    }
-
-    /**
-     * Test wrapper for the generalRedirect dataset
-     *
-     * @return null
-     * @throws \Exception
-     */
-    public function testGeneralRedirect()
-    {
-        try {
-
-            // Now check if we got the same thing here
-            $this->assertionEngine('generalRedirect');
-
-        } catch (\Exception $e) {
-
-            // Re-throw the exception
-            throw $e;
-        }
-    }
-
-    /**
-     * Test wrapper for the conditionedRedirect dataset
-     *
-     * @return null
-     * @throws \Exception
-     */
-    public function testConditionedRedirect()
-    {
-        try {
-
-            // Now check if we got the same thing here
-            $this->assertionEngine('conditionedRedirect');
-
-        } catch (\Exception $e) {
-
-            // Re-throw the exception
-            throw $e;
-        }
+        // Test what we got
+        $this->assertTrue(isset($rewriteModule->getServerBackreferences()['$Host']));
+        $this->assertTrue(isset($rewriteModule->getServerBackreferences()['$HTTP_HOST']));
+        $this->assertEquals('test-host.com', $rewriteModule->getServerBackreferences()['$HTTP_HOST']);
     }
 }

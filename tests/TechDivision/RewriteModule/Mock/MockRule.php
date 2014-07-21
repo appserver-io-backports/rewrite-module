@@ -8,51 +8,63 @@
  *
  * PHP version 5
  *
- * @category   Appserver
+ * @category   WebServer
  * @package    TechDivision_RewriteModule
- * @subpackage Dictionaries
+ * @subpackage Mock
  * @author     Bernhard Wick <b.wick@techdivision.com>
  * @copyright  2014 TechDivision GmbH - <info@techdivision.com>
  * @license    http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link       http://www.techdivision.com/
  */
 
-namespace TechDivision\RewriteModule\Dictionaries;
+namespace TechDivision\RewriteModule\Mock;
+
+use TechDivision\RewriteModule\Entities\Rule;
 
 /**
- * TechDivision\RewriteModule\Dictionaries\RuleFlags
+ * TechDivision\RewriteModule\Mock\MockRule
  *
- * This file is a dictionary for rule flags.
- * Defines constant for flags we might use within the rule's flag field
+ * Mocks the Rule class to expose additional and hidden functionality
  *
- * @category   Appserver
+ * @category   WebServer
  * @package    TechDivision_RewriteModule
- * @subpackage Dictionaries
+ * @subpackage Mock
  * @author     Bernhard Wick <b.wick@techdivision.com>
  * @copyright  2014 TechDivision GmbH - <info@techdivision.com>
  * @license    http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link       http://www.techdivision.com/
  */
-class RuleFlags
+class MockRule extends Rule
 {
     /**
-     * Make a redirect instead of a mere rewrite
+     * Used to open up the parent's sortFlags() method for testing
      *
-     * @var string
+     * @param string $flagString The unsorted string of flags
+     *
+     * @return array
      */
-    const REDIRECT = 'R';
+    public function sortFlags($flagString)
+    {
+        return parent::sortFlags($flagString);
+    }
 
     /**
-     * Take the target from a specified map
+     * Getter function for the protected $type member
      *
-     * @var string
+     * @return string
      */
-    const MAP = 'M';
+    public function getType()
+    {
+        return $this->type;
+    }
 
     /**
-     * Do not process following rewrite rules if this one matches
+     * Getter function for the protected $sortedFlags member
      *
-     * @var string
+     * @return array
      */
-    const LAST = 'L';
+    public function getSortedFlags()
+    {
+        return $this->sortedFlags;
+    }
 }

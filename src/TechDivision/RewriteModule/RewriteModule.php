@@ -20,7 +20,6 @@ namespace TechDivision\RewriteModule;
 
 use TechDivision\Connection\ConnectionRequestInterface;
 use TechDivision\Connection\ConnectionResponseInterface;
-use TechDivision\Http\HttpProtocol;
 use TechDivision\Server\Dictionaries\ModuleHooks;
 use TechDivision\Server\Exceptions\ModuleException;
 use TechDivision\Server\Dictionaries\ServerVars;
@@ -28,7 +27,6 @@ use TechDivision\Server\Dictionaries\EnvVars;
 use TechDivision\Server\Interfaces\RequestContextInterface;
 use TechDivision\Server\Interfaces\ServerContextInterface;
 use TechDivision\Http\HttpRequestInterface;
-use TechDivision\Http\HttpResponseInterface;
 use TechDivision\Server\Interfaces\ModuleInterface;
 use TechDivision\Server\Dictionaries\ModuleVars;
 use TechDivision\RewriteModule\Entities\Rule;
@@ -42,8 +40,6 @@ use TechDivision\RewriteModule\Entities\Rule;
  * @copyright 2014 TechDivision GmbH <info@techdivision.com>
  * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://github.com/techdivision/TechDivision_WebServer
- *
- * TODO there currently is no possibility for internal subrequests
  */
 class RewriteModule implements ModuleInterface
 {
@@ -230,7 +226,7 @@ class RewriteModule implements ModuleInterface
      * @param \TechDivision\Connection\ConnectionRequestInterface     $request        A request object
      * @param \TechDivision\Connection\ConnectionResponseInterface    $response       A response object
      * @param \TechDivision\Server\Interfaces\RequestContextInterface $requestContext A requests context instance
-     * @param int                                                     $hook           The current hook to process logic for
+     * @param int                                                     $hook           The current hook to process
      *
      * @return bool
      * @throws \TechDivision\Server\Exceptions\ModuleException
@@ -242,7 +238,7 @@ class RewriteModule implements ModuleInterface
         $hook
     ) {
         // In php an interface is, by definition, a fixed contract. It is immutable.
-        // So we have to declair the right ones afterwards...
+        // So we have to declare the right ones afterwards...
         /** @var $request \TechDivision\Http\HttpRequestInterface */
         /** @var $request \TechDivision\Http\HttpResponseInterface */
 
@@ -271,7 +267,6 @@ class RewriteModule implements ModuleInterface
                 // as easily as, say, the URI
                 // We also have to resolve all the changes rules in front of us made, so build up the backreferences
                 // IN the loop.
-                // TODO switch to backreference request not prefill as it might be faster
                 $this->fillContextBackreferences();
                 $this->fillHeaderBackreferences($request);
                 $this->fillSslEnvironmentBackreferences();
@@ -330,11 +325,11 @@ class RewriteModule implements ModuleInterface
     /**
      * Will fill the header variables into our pre-collected $serverVars array
      *
-     * @param \TechDivision\Http\HttpRequestInterface $request The request instance
+     * @param \TechDivision\Connection\ConnectionRequestInterface $request The request instance
      *
      * @return void
      */
-    protected function fillHeaderBackreferences(HttpRequestInterface $request)
+    protected function fillHeaderBackreferences(ConnectionRequestInterface $request)
     {
         $headerArray = $request->getHeaders();
 
@@ -363,8 +358,6 @@ class RewriteModule implements ModuleInterface
      * These are empty as long as the SSL module is not loaded.
      *
      * @return void
-     *
-     * TODO Get this vars from the SSL module as soon as it exists
      */
     protected function fillSslEnvironmentBackreferences()
     {
@@ -436,8 +429,7 @@ class RewriteModule implements ModuleInterface
     /**
      * Prepares the module for upcoming request in specific context
      *
-     * @return bool
-     * @throws \TechDivision\Server\Exceptions\ModuleException
+     * @return void
      */
     public function prepare()
     {
