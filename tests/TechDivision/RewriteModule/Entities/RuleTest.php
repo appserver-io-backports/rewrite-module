@@ -142,4 +142,23 @@ class RuleTest extends \PHPUnit_Framework_TestCase
         $rule->apply($mockRequestContext, $response, array());
         $this->assertEquals('/testTarget', $rule->getTarget());
     }
+
+    /**
+     * Test for a path through the apply() method
+     *
+     * @return void
+     *
+     * @depends testSortFlags
+     */
+    public function testApplyWithBackrefMap()
+    {
+        // Get the objects we need
+        $rule = new MockRule('.*', array('testBert' => 'testTarget'), 'M=test$BACKREF');
+        $mockRequestContext = new MockRequestContext();
+        $response = new HttpResponse();
+
+        // Do the thing
+        $rule->apply($mockRequestContext, $response, array('$BACKREF' => 'Bert'));
+        $this->assertEquals('/testTarget', $rule->getTarget());
+    }
 }
