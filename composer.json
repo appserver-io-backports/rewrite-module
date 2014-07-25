@@ -1,25 +1,49 @@
 {
-    "name": "techdivision/rewritemodule",
-    "description": "A simple rewrite module for PHP based web servers.",
-    "keywords": ["mod_rewrite", "URL rewriting", "webserver", "module"],
-    "homepage": "https://github.com/techdivision/TechDivision_RewriteModule",
-    "license": ["OSL-3.0"],
-    "require": {
-        "php": ">=5.4.0",
-        "techdivision/http": "0.1.*",
-        "techdivision/server": "0.1.*"
-    },
-    "suggest": {
-        "techdivision/appserver-documentation": "Complete documentation of the appserver.io project"
-    },
-    "autoload": {
-        "psr-0": {
-            "TechDivision\\RewriteModule": ["src/", "tests/"]
-        }
-    },
-    "config": {
-        "github-oauth": {
-            "github.com": "604a3b5943228e434a5b52c2ba3cf72286d30db9"
-        }
-    }
+	"name" : "techdivision/rewritemodule",
+	"description" : "A simple rewrite module for PHP based web servers.",
+	"homepage" : "https://github.com/techdivision/TechDivision_RewriteModule",
+	"license" : "OSL-3.0",
+	"keywords" : [
+		"mod_rewrite",
+		"url rewriting",
+		"webserver",
+		"module"
+	],
+	"authors" : [{
+			"name" : "Bernhard Wick",
+			"email" : "b.wick@techdivision.com",
+			"homepage" : "https://github.com/wagnert",
+			"role" : "Developer"
+		}
+	],
+	"require" : {
+		"php" : ">=5.4.0",
+		"techdivision/http" : "0.1.*",
+		"techdivision/server" : "0.1.*"
+	},
+	"require-dev" : {
+		"phpunit/phpunit" : "3.7.*",
+		"appserver-io/build" : "0.1.*"
+	},
+	"suggest" : {
+		"techdivision/appserver-documentation" : "Complete documentation of the appserver.io project"
+	},
+	"autoload" : {
+		"psr-0" : {
+			"TechDivision\\RewriteModule" : [
+				"src/",
+				"tests/"
+			]
+		}
+	},
+	"config" : {
+		"github-oauth" : {
+			"github.com" : "604a3b5943228e434a5b52c2ba3cf72286d30db9"
+		}
+	},
+	"support" : {
+		"email" : "b.wick@techdivision.com",
+		"issues" : "https://github.com/techdivision/TechDivision_RewriteModule/issues",
+		"source" : "https://github.com/techdivision/TechDivision_RewriteModule"
+	}
 }
