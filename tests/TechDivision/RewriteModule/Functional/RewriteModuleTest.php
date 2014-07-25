@@ -154,6 +154,23 @@ class RewriteModuleTest extends \PHPUnit_Framework_TestCase
         $this->request = new HttpRequest();
         $this->response = new HttpResponse();
         $this->response->init();
+
+        // We have to create a symbolic link for our tests here as we cannot copy them via ant
+        symlink(
+            __DIR__ . '/../_files/html/index.html',
+            __DIR__ . '/../_files/html/symlink.html'
+        );
+    }
+
+    /**
+     * Clean up our test environment.
+     *
+     * @return void
+     */
+    public function tearDown()
+    {
+        // We have to remvoe the symlinks
+        unlink(__DIR__ . '/../_files/html/symlink.html');
     }
 
     /**
