@@ -266,6 +266,26 @@ class RewriteModuleTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * Test wrapper for the realDir dataset
+     *
+     * @return null
+     * @throws \Exception
+     */
+    public function testRealDir()
+    {
+        try {
+
+            // Now check if we got the same thing here
+            $this->assertionEngine('realDir');
+
+        } catch (\Exception $e) {
+
+            // Re-throw the exception
+            throw $e;
+        }
+    }
+
+    /**
      * Test wrapper for the realFile dataset
      *
      * @return null
@@ -286,17 +306,17 @@ class RewriteModuleTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * Test wrapper for the realDir dataset
+     * Test wrapper for the redirectUri dataset
      *
      * @return null
      * @throws \Exception
      */
-    public function testRealDir()
+    public function testRedirectUri()
     {
         try {
 
             // Now check if we got the same thing here
-            $this->assertionEngine('realDir');
+            $this->assertionEngine('redirectUri');
 
         } catch (\Exception $e) {
 

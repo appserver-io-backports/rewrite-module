@@ -50,5 +50,18 @@ $ruleSets = array(
         'map' => array(
             '/html/index.html' => '/html/index.html'
         )
+    ),
+    'uriRedirect' => array(
+        'redirect' => true,
+        'rules' => array(
+            array(
+                'condition' => '',
+                'target' => '/test/uri',
+                'flag' => 'R'
+            )
+        ),
+        'map' => array(
+            '/html/index.html' => 'http://unittest.local:9080/test/uri'
+        )
     )
 );
