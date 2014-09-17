@@ -22,13 +22,6 @@ If you want to use the rewrite module with your application you can install it b
 
 to your ```composer.json``` and invoke ```composer update``` in your project.
 
-## Usage
-
-Coming soon!
-
-# External Links
-
-* Documentation at [appserver.io](http://docs.appserver.io)
-* Documentation on [GitHub](https://github.com/techdivision/TechDivision_AppserverDocumentation)
-* [Getting started](https://github.com/techdivision/TechDivision_AppserverDocumentation/tree/master/docs/getting-started)
-* [Rewrite Module](https://github.com/techdivision/TechDivision_AppserverDocumentation/blob/master/docs/components/servers/webserver/modules/rewritemodule.md)
+## Documentation
+Our documentation moved!
+Have a look [here](<http://docs.appserver.io/master/components/servers/webserver/modules/rewritemodule.html>)
