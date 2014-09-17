@@ -66,6 +66,7 @@ class MockRequestContext extends RequestContext
             'HTTPS' => 'off',
             'REMOTE_ADDR' => '127.0.0.1',
             'REMOTE_PORT' => '57354',
+            'REQUEST_SCHEME' => 'http',
             'REQUEST_TIME' => 1396882009,
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'HTTP_USER_AGENT' => 'Mozilla/5.0 (X11; Linux x86_64; rv:28.0) Gecko/20100101 Firefox/28.0',

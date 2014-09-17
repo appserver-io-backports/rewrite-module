@@ -349,7 +349,7 @@ class Rule
     /**
      * Initiates the module
      *
-     * @param \TechDivision\Server\Interfaces\RequestContextInterface $requestContext       The server's context
+     * @param \TechDivision\Server\Interfaces\RequestContextInterface $requestContext       The request's context
      * @param \TechDivision\Http\HttpResponseInterface                $response             The response instance
      * @param array                                                   $serverBackreferences Server backreferences
      *
@@ -433,22 +433,16 @@ class Rule
                 // Set the REQUEST_FILENAME path
                 $requestContext->setServerVar(ServerVars::REQUEST_FILENAME, $this->target);
 
-            } elseif (filter_var($this->target, FILTER_VALIDATE_URL) !== false &&
-                array_key_exists(RuleFlags::REDIRECT, $this->sortedFlags)
-            ) {
+            } elseif (filter_var($this->target, FILTER_VALIDATE_URL) !== false) {
 
-                // We have an url to redirect to!
+                // We have a complete URL!
                 $this->type = 'url';
-                // set enhance uri to response
-                $response->addHeader(HttpProtocol::HEADER_LOCATION, $this->target);
-                // send redirect status
-                $response->setStatusCode(301);
-                // set response state to be dispatched after this without calling other modules process
-                $response->setState(HttpResponseStates::DISPATCH);
 
             } else {
                 // Last but not least we might have gotten a relative path (most likely)
                 // Build up the REQUEST_FILENAME from DOCUMENT_ROOT and X_REQUEST_URI (without the query string)
+                $this->type = 'relative';
+
                 $requestContext->setServerVar(
                     ServerVars::SCRIPT_FILENAME,
                     $requestContext->getServerVar(ServerVars::DOCUMENT_ROOT) . DIRECTORY_SEPARATOR . $this->target
@@ -467,8 +461,15 @@ class Rule
                 }
             }
 
+            // do we have to make a redirect?
+            // if so we have to have to set the status code accordingly and dispatch the response
+            if (array_key_exists(RuleFlags::REDIRECT, $this->sortedFlags)) {
+
+                $this->prepareRedirect($requestContext, $response);
+            }
+
             // Lets tell them that we successfully made a redirect
-            $requestContext->setServerVar('REDIRECT_STATUS', '200');
+            $requestContext->setServerVar(ServerVars::REDIRECT_STATUS, '200');
         }
         // If we got the "LAST"-flag we have to end here, so return false
         if (array_key_exists(RuleFlags::LAST, $this->sortedFlags)) {
@@ -478,6 +479,43 @@ class Rule
 
         // Still here? That sounds good
         return true;
+    }
+
+    /**
+     * Will prepare a response for a redirect.
+     * This includes setting the new target, the appropriate status code and dispatching it to break the
+     * module chain
+     *
+     * @param \TechDivision\Server\Interfaces\RequestContextInterface $requestContext The request's context
+     * @param \TechDivision\Http\HttpResponseInterface                $response       The response instance to be prepared
+     *
+     * @return void
+     */
+    protected function prepareRedirect($requestContext, $response)
+    {
+        // if we got a specific status code we have to filter it and apply it if possible
+        $statusCode = 301;
+        $proposedStatusCode = $this->sortedFlags[RuleFlags::REDIRECT];
+        if (is_numeric($proposedStatusCode) && $proposedStatusCode >= 300 && $proposedStatusCode < 400) {
+
+            $statusCode = $proposedStatusCode;
+        }
+
+        // there might be work to be done depending on whether or not we got a complete URL
+        if ($this->type === 'relative') {
+
+            $newTarget = $requestContext->getServerVar(ServerVars::REQUEST_SCHEME);
+            $newTarget .= '://';
+            $newTarget .= $requestContext->getServerVar(ServerVars::HTTP_HOST);
+            $this->target = $newTarget . $this->getTarget();
+        }
+
+        // set enhance uri to response
+        $response->addHeader(HttpProtocol::HEADER_LOCATION, $this->target);
+        // send redirect status
+        $response->setStatusCode($statusCode);
+        // set response state to be dispatched after this without calling other modules process
+        $response->setState(HttpResponseStates::DISPATCH);
     }
 
     /**

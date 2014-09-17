@@ -144,6 +144,7 @@ class RewriteModuleTest extends \PHPUnit_Framework_TestCase
                 // Per convention we got the variables $rules, and $map within a file
                 $this->rewriteDataSets[$setName] = array(
                     'redirect' => @$ruleSet['redirect'],
+                    'redirectAs' => @$ruleSet['redirectAs'],
                     'rules' => $ruleSet['rules'],
                     'map' => $ruleSet['map']
                 );
@@ -182,7 +183,7 @@ class RewriteModuleTest extends \PHPUnit_Framework_TestCase
      *
      * @param string $testDataSet The dataset to test against
      *
-     * @return void
+     * @return boolean
      * @throws \Exception
      */
     public function assertionEngine($testDataSet)
@@ -215,7 +216,7 @@ class RewriteModuleTest extends \PHPUnit_Framework_TestCase
 
                 try {
                     // Has the header location been set at all?
-                    // If we did not match any redirect condition and will set it to the input
+                    // If we did not match any redirect condition and will set it to the input so we get some output
                     if (!$this->response->hasHeader(HttpProtocol::HEADER_LOCATION)) {
 
                         $this->response->addHeader(HttpProtocol::HEADER_LOCATION, $input);
@@ -223,6 +224,11 @@ class RewriteModuleTest extends \PHPUnit_Framework_TestCase
 
                     // Asserting that the header location was set correctly
                     $this->assertSame($desiredOutput, $this->response->getHeader(HttpProtocol::HEADER_LOCATION));
+                    // If we got a custom status code we have to check for it
+                    if (isset($dataSet['redirectAs'])) {
+
+                        $this->assertSame($dataSet['redirectAs'], (int) $this->response->getStatusCode());
+                    }
 
                 } catch (\Exception $e) {
 
@@ -316,7 +322,49 @@ class RewriteModuleTest extends \PHPUnit_Framework_TestCase
         try {
 
             // Now check if we got the same thing here
-            $this->assertionEngine('redirectUri');
+            $this->assertionEngine('uriRedirect');
+
+        } catch (\Exception $e) {
+
+            // Re-throw the exception
+            throw $e;
+        }
+    }
+
+    /**
+     * Will test if it is possible to set a valid status code when redirecting.
+     * Also wraps around our assertion engine
+     *
+     * @return null
+     * @throws \Exception
+     */
+    public function testRedirectValidStatusCode()
+    {
+        try {
+
+            // Now check if we got the same thing here
+            $this->assertionEngine('redirectValidStatusCode');
+
+        } catch (\Exception $e) {
+
+            // Re-throw the exception
+            throw $e;
+        }
+    }
+
+    /**
+     * Will test if an invalid status code will be ignored and the default redirect status code will be set.
+     * Also wraps around our assertion engine
+     *
+     * @return null
+     * @throws \Exception
+     */
+    public function testRedirectInvalidStatusCode()
+    {
+        try {
+
+            // Now check if we got the same thing here
+            $this->assertionEngine('redirectInvalidStatusCode');
 
         } catch (\Exception $e) {
 
