@@ -1,3 +1,14 @@
+# Version 0.6.3
+
+## Bugfixes
+
+* None
+
+## Features
+
+* Add possibility to set custom status codes (between 300 and 399) for redirects => analog apache mod_rewrite
+* Add support for redirects relative to the current host => analog apache mod_rewrite
+
 # Version 0.6.2
 
 ## Bugfixes
