@@ -20,7 +20,22 @@
  * This list contains rewrite rules as they would be used within our server configuration.
  * To make tests independent from config parsing we have to provide them already split up.
  *
- * This map contains URI pairs of the sort "incoming URI" => "expected URI after rewrite"
+ * All entries follow the structure below:
+ *
+ *  '<DATASET_NAME>' => array( // a specific name of the data set
+ *      'redirect' => true, // optional, whether or not the listed rewrites are redirects (have to be tested differently)
+ *      'redirectAs' => 301, // optional, might contain a custom status code used for redirects (between 300 and 399)
+ *      'rules' => array( // array of rule arrays
+ *          array(
+ *              'condition' => '.*', // condition as one would use it within a rewrite definition
+ *              'target' => 'https://www.google.com', // target as one would use it within a rewrite definition
+ *              'flag' => 'R' // flag string as one would use it within a rewrite definition
+ *          )
+ *      ),
+ *      'map' => array( // this map contains URI/URL pairs of the sort "incoming URI" => "expected URI/URL after rewrite"
+ *          '/html/index.html' => 'https://www.google.com'
+ *      )
+ *  ),
  *
  * @var array $ruleSets The rewrite rule sets this test is based on
  */
