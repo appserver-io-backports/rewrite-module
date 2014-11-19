@@ -269,7 +269,6 @@ class RewriteModule implements ModuleInterface
                 // IN the loop.
                 $this->fillContextBackreferences();
                 $this->fillHeaderBackreferences($request);
-                $this->fillSslEnvironmentBackreferences();
 
                 // Get the rules as the array they are within the config.
                 // We have to also collect any volatile rules which might be set on request base.
@@ -350,21 +349,6 @@ class RewriteModule implements ModuleInterface
                     "TechDivision\\Http\\HttpProtocol::$tmp"
                 )];
             }
-        }
-    }
-
-    /**
-     * Will fill the SSL environment variables into the backreferences.
-     * These are empty as long as the SSL module is not loaded.
-     *
-     * @return void
-     */
-    protected function fillSslEnvironmentBackreferences()
-    {
-        // Iterate over all SSL environment variables and fill them into our backreferences
-        foreach ($this->supportedEnvVars as $supportedSslEnvironmentVar) {
-
-            $this->serverBackreferences['$' . $supportedSslEnvironmentVar . ''] = '';
         }
     }
 

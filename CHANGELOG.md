@@ -1,3 +1,13 @@
+# Version 0.6.4
+
+## Bugfixes
+
+* Removed SSL context backreferences as they influenced the request context backreferences
+
+## Features
+
+* None
+
 # Version 0.6.3
 
 ## Bugfixes
